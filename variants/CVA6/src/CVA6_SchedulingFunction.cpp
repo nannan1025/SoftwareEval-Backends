@@ -1,5 +1,5 @@
 /*
-* Copyright 2025 Chair of EDA, Technical University of Munich
+* Copyright 2026 Chair of EDA, Technical University of Munich
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -61,7 +62,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -92,6 +104,10 @@ perfModel->ID_stage = n_ID_stage;
 // Issue
 uint64_t n_Issue = n_ID_stage;
 // IS_stage
+uint64_t n_EXSubpipeBase = n_Issue;
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -103,14 +119,20 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -130,6 +152,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -149,7 +172,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -180,6 +214,10 @@ perfModel->ID_stage = n_ID_stage;
 // Issue
 uint64_t n_Issue = n_ID_stage;
 // IS_stage
+uint64_t n_EXSubpipeBase = n_Issue;
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -192,7 +230,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -200,7 +242,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -220,6 +264,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -239,7 +284,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -270,6 +326,10 @@ perfModel->ID_stage = n_ID_stage;
 // Issue
 uint64_t n_Issue = n_ID_stage;
 // IS_stage
+uint64_t n_EXSubpipeBase = n_Issue;
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -282,7 +342,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -290,7 +354,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -310,6 +376,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -329,7 +396,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -360,6 +438,10 @@ perfModel->ID_stage = n_ID_stage;
 // Issue
 uint64_t n_Issue = n_ID_stage;
 // IS_stage
+uint64_t n_EXSubpipeBase = n_Issue;
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -372,7 +454,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -380,7 +466,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -400,6 +488,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -419,7 +508,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -450,6 +550,10 @@ perfModel->ID_stage = n_ID_stage;
 // Issue
 uint64_t n_Issue = n_ID_stage;
 // IS_stage
+uint64_t n_EXSubpipeBase = n_Issue;
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -462,7 +566,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -470,7 +578,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -490,6 +600,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -509,7 +620,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -540,6 +662,10 @@ perfModel->ID_stage = n_ID_stage;
 // Issue
 uint64_t n_Issue = n_ID_stage;
 // IS_stage
+uint64_t n_EXSubpipeBase = n_Issue;
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -552,7 +678,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -560,7 +690,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -580,6 +712,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -599,7 +732,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -631,11 +775,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -648,7 +796,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -656,7 +808,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -676,6 +830,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -695,7 +850,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -727,11 +893,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -744,7 +914,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -752,7 +926,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -772,6 +948,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -791,7 +968,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -823,11 +1011,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -840,7 +1032,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -848,7 +1044,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -868,6 +1066,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -887,7 +1086,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -919,11 +1129,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -936,7 +1150,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -944,7 +1162,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -964,6 +1184,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -983,7 +1204,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1015,11 +1247,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1032,7 +1268,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1040,7 +1280,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1060,6 +1302,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1079,7 +1322,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1111,11 +1365,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1128,7 +1386,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1136,7 +1398,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1156,6 +1420,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1175,7 +1440,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1207,11 +1483,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1224,7 +1504,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1232,7 +1516,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1252,6 +1538,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1271,7 +1558,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1303,11 +1601,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1320,7 +1622,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1328,7 +1634,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1348,6 +1656,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1367,7 +1676,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1399,11 +1719,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1416,7 +1740,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1424,7 +1752,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1444,6 +1774,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1463,7 +1794,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1495,11 +1837,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1512,7 +1858,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1520,7 +1870,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1540,6 +1892,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1559,7 +1912,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1591,11 +1955,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1608,7 +1976,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1616,7 +1988,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1636,6 +2010,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1655,7 +2030,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1687,11 +2073,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1704,7 +2094,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1712,7 +2106,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1732,6 +2128,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1751,7 +2148,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1783,11 +2191,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1800,7 +2212,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1808,7 +2224,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1828,6 +2246,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1847,7 +2266,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1879,11 +2309,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1896,7 +2330,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -1904,7 +2342,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -1924,6 +2364,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -1943,7 +2384,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -1975,11 +2427,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -1992,7 +2448,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2000,7 +2460,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2020,6 +2482,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2039,7 +2502,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2071,11 +2545,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2088,7 +2566,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2096,7 +2578,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2116,6 +2600,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2135,7 +2620,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2167,14 +2663,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2187,7 +2687,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2195,7 +2699,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2215,6 +2721,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2234,7 +2741,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2266,14 +2784,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2286,7 +2808,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2294,7 +2820,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2314,6 +2842,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2333,7 +2862,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2365,14 +2905,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2385,7 +2929,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2393,7 +2941,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2413,6 +2963,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2432,7 +2983,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2464,14 +3026,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2484,7 +3050,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2492,7 +3062,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2512,6 +3084,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2531,7 +3104,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2563,14 +3147,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2583,7 +3171,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2591,7 +3183,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2611,6 +3205,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2630,7 +3225,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2662,14 +3268,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2682,7 +3292,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2690,7 +3304,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2710,6 +3326,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2729,7 +3346,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2761,14 +3389,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2781,7 +3413,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2789,7 +3425,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2809,6 +3447,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2828,7 +3467,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2860,14 +3510,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2880,7 +3534,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2888,7 +3546,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -2908,6 +3568,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -2927,7 +3588,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -2959,14 +3631,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -2979,7 +3655,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -2987,7 +3667,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3007,6 +3689,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3026,7 +3709,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3058,14 +3752,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3078,7 +3776,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -3086,7 +3788,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3106,6 +3810,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3125,7 +3830,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3157,14 +3873,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3177,7 +3897,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -3185,7 +3909,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3205,6 +3931,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3224,7 +3951,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3256,14 +3994,18 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3276,7 +4018,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -3284,7 +4030,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3304,6 +4052,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3323,7 +4072,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3356,11 +4116,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3373,14 +4137,20 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3400,6 +4170,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3419,7 +4190,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3452,11 +4234,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3469,14 +4255,20 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3496,6 +4288,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3515,7 +4308,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3548,11 +4352,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3565,14 +4373,20 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3592,6 +4406,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3611,7 +4426,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3644,11 +4470,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3661,14 +4491,20 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3688,6 +4524,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3707,7 +4544,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3740,11 +4588,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3757,14 +4609,20 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3784,6 +4642,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3803,7 +4662,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3836,11 +4706,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3853,14 +4727,20 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3880,6 +4760,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3899,7 +4780,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -3932,8 +4824,12 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -3946,7 +4842,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -3954,7 +4854,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -3974,6 +4876,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -3993,7 +4896,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4026,11 +4940,15 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_alu, "ALU", "EX_substage_alu");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_o, "ALU", "EX_substage_mul_o");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "ALU", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_alu, perfModel->EX_substage_mul_o, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
@@ -4044,7 +4962,11 @@ uint64_t n_EX_substage_alu = n_ALU;
 perfModel->EX_substage_alu = n_EX_substage_alu;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_alu, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_alu, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_alu, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4052,7 +4974,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4072,6 +4996,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -4091,7 +5016,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4123,20 +5059,24 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_i, "MUL", "EX_substage_mul_i");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "MUL", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_mul_i, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // MUL_I
 uint64_t n_MUL_I;
 n_MUL_I = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_MUL_I, perfModel->EX_substage_mul_o, "MUL", "EX_substage_mul_o");
 // EX_substage_mul_i
 uint64_t n_EX_substage_mul_i;
 n_EX_substage_mul_i = std::max({n_MUL_I, perfModel->EX_substage_mul_o});
@@ -4150,7 +5090,11 @@ uint64_t n_EX_substage_mul_o = n_MUL_O;
 perfModel->EX_substage_mul_o = n_EX_substage_mul_o;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_mul_o, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_mul_o, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_mul_o, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4158,7 +5102,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4178,6 +5124,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -4197,7 +5144,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4229,20 +5187,24 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_i, "MUL", "EX_substage_mul_i");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "MUL", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_mul_i, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // MUL_I
 uint64_t n_MUL_I;
 n_MUL_I = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_MUL_I, perfModel->EX_substage_mul_o, "MUL", "EX_substage_mul_o");
 // EX_substage_mul_i
 uint64_t n_EX_substage_mul_i;
 n_EX_substage_mul_i = std::max({n_MUL_I, perfModel->EX_substage_mul_o});
@@ -4256,7 +5218,11 @@ uint64_t n_EX_substage_mul_o = n_MUL_O;
 perfModel->EX_substage_mul_o = n_EX_substage_mul_o;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_mul_o, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_mul_o, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_mul_o, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4264,7 +5230,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4284,6 +5252,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -4303,7 +5272,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4335,20 +5315,24 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_i, "MUL", "EX_substage_mul_i");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "MUL", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_mul_i, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // MUL_I
 uint64_t n_MUL_I;
 n_MUL_I = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_MUL_I, perfModel->EX_substage_mul_o, "MUL", "EX_substage_mul_o");
 // EX_substage_mul_i
 uint64_t n_EX_substage_mul_i;
 n_EX_substage_mul_i = std::max({n_MUL_I, perfModel->EX_substage_mul_o});
@@ -4362,7 +5346,11 @@ uint64_t n_EX_substage_mul_o = n_MUL_O;
 perfModel->EX_substage_mul_o = n_EX_substage_mul_o;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_mul_o, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_mul_o, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_mul_o, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4370,7 +5358,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4390,6 +5380,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -4409,7 +5400,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4441,20 +5443,24 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_i, "MUL", "EX_substage_mul_i");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "MUL", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_mul_i, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // MUL_I
 uint64_t n_MUL_I;
 n_MUL_I = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_MUL_I, perfModel->EX_substage_mul_o, "MUL", "EX_substage_mul_o");
 // EX_substage_mul_i
 uint64_t n_EX_substage_mul_i;
 n_EX_substage_mul_i = std::max({n_MUL_I, perfModel->EX_substage_mul_o});
@@ -4468,7 +5474,11 @@ uint64_t n_EX_substage_mul_o = n_MUL_O;
 perfModel->EX_substage_mul_o = n_EX_substage_mul_o;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_mul_o, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_mul_o, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_mul_o, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4476,7 +5486,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4496,6 +5508,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -4515,7 +5528,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4547,20 +5571,24 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_mul_i, "MUL", "EX_substage_mul_i");
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, "MUL", "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_mul_i, perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // MUL_I
 uint64_t n_MUL_I;
 n_MUL_I = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_MUL_I, perfModel->EX_substage_mul_o, "MUL", "EX_substage_mul_o");
 // EX_substage_mul_i
 uint64_t n_EX_substage_mul_i;
 n_EX_substage_mul_i = std::max({n_MUL_I, perfModel->EX_substage_mul_o});
@@ -4574,7 +5602,11 @@ uint64_t n_EX_substage_mul_o = n_MUL_O;
 perfModel->EX_substage_mul_o = n_EX_substage_mul_o;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_mul_o, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_mul_o, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_mul_o, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4582,7 +5614,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4602,6 +5636,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -4621,7 +5656,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4653,26 +5699,35 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+const char* n_EXSubpipeKind = (perfModel->typeId_ptr[perfModel->instrIndex] >= 51 && perfModel->typeId_ptr[perfModel->instrIndex] <= 54) ? "DIVU" : "DIV";
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, n_EXSubpipeKind, "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_IS_stage + perfModel->divider.getDelay();
+uint64_t divDelay = perfModel->divider.getDelay();
+n_DIV = n_IS_stage + divDelay;
+perfModel->setDividerInstrumentation(divDelay);
 // EX_substage_div
 uint64_t n_EX_substage_div = n_DIV;
 perfModel->EX_substage_div = n_EX_substage_div;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_div, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_div, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_div, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4680,7 +5735,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4700,6 +5757,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -4719,7 +5777,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4751,26 +5820,35 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+const char* n_EXSubpipeKind = (perfModel->typeId_ptr[perfModel->instrIndex] >= 51 && perfModel->typeId_ptr[perfModel->instrIndex] <= 54) ? "DIVU" : "DIV";
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, n_EXSubpipeKind, "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_IS_stage + perfModel->divider.getDelay();
+uint64_t divDelay = perfModel->divider.getDelay();
+n_DIV = n_IS_stage + divDelay;
+perfModel->setDividerInstrumentation(divDelay);
 // EX_substage_div
 uint64_t n_EX_substage_div = n_DIV;
 perfModel->EX_substage_div = n_EX_substage_div;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_div, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_div, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_div, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4778,7 +5856,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4798,6 +5878,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -4817,7 +5898,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4849,26 +5941,35 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+const char* n_EXSubpipeKind = (perfModel->typeId_ptr[perfModel->instrIndex] >= 51 && perfModel->typeId_ptr[perfModel->instrIndex] <= 54) ? "DIVU" : "DIV";
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, n_EXSubpipeKind, "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_IS_stage + perfModel->divider.getDelay();
+uint64_t divDelay = perfModel->divider.getDelay();
+n_DIV = n_IS_stage + divDelay;
+perfModel->setDividerInstrumentation(divDelay);
 // EX_substage_div
 uint64_t n_EX_substage_div = n_DIV;
 perfModel->EX_substage_div = n_EX_substage_div;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_div, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_div, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_div, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4876,7 +5977,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4896,6 +5999,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -4915,7 +6019,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -4947,26 +6062,35 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+const char* n_EXSubpipeKind = (perfModel->typeId_ptr[perfModel->instrIndex] >= 51 && perfModel->typeId_ptr[perfModel->instrIndex] <= 54) ? "DIVU" : "DIV";
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, n_EXSubpipeKind, "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_IS_stage + perfModel->divider.getDelay();
+uint64_t divDelay = perfModel->divider.getDelay();
+n_DIV = n_IS_stage + divDelay;
+perfModel->setDividerInstrumentation(divDelay);
 // EX_substage_div
 uint64_t n_EX_substage_div = n_DIV;
 perfModel->EX_substage_div = n_EX_substage_div;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_div, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_div, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_div, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -4974,7 +6098,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -4994,6 +6120,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5013,7 +6140,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5045,26 +6183,35 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+const char* n_EXSubpipeKind = (perfModel->typeId_ptr[perfModel->instrIndex] >= 51 && perfModel->typeId_ptr[perfModel->instrIndex] <= 54) ? "DIVU" : "DIV";
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, n_EXSubpipeKind, "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_IS_stage + perfModel->divider_u.getDelay();
+uint64_t divDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_IS_stage + divDelay;
+perfModel->setDividerInstrumentation(divDelay);
 // EX_substage_div
 uint64_t n_EX_substage_div = n_DIVU;
 perfModel->EX_substage_div = n_EX_substage_div;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_div, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_div, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_div, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -5072,7 +6219,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -5092,6 +6241,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5111,7 +6261,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5143,26 +6304,35 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+const char* n_EXSubpipeKind = (perfModel->typeId_ptr[perfModel->instrIndex] >= 51 && perfModel->typeId_ptr[perfModel->instrIndex] <= 54) ? "DIVU" : "DIV";
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, n_EXSubpipeKind, "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_IS_stage + perfModel->divider_u.getDelay();
+uint64_t divDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_IS_stage + divDelay;
+perfModel->setDividerInstrumentation(divDelay);
 // EX_substage_div
 uint64_t n_EX_substage_div = n_DIVU;
 perfModel->EX_substage_div = n_EX_substage_div;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_div, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_div, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_div, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -5170,7 +6340,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -5190,6 +6362,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5209,7 +6382,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5241,26 +6425,35 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+const char* n_EXSubpipeKind = (perfModel->typeId_ptr[perfModel->instrIndex] >= 51 && perfModel->typeId_ptr[perfModel->instrIndex] <= 54) ? "DIVU" : "DIV";
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, n_EXSubpipeKind, "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_IS_stage + perfModel->divider_u.getDelay();
+uint64_t divDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_IS_stage + divDelay;
+perfModel->setDividerInstrumentation(divDelay);
 // EX_substage_div
 uint64_t n_EX_substage_div = n_DIVU;
 perfModel->EX_substage_div = n_EX_substage_div;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_div, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_div, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_div, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -5268,7 +6461,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -5288,6 +6483,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5307,7 +6503,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5339,26 +6546,35 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B});
+const char* n_EXSubpipeKind = (perfModel->typeId_ptr[perfModel->instrIndex] >= 51 && perfModel->typeId_ptr[perfModel->instrIndex] <= 54) ? "DIVU" : "DIV";
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_div, n_EXSubpipeKind, "EX_substage_div");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_div});
 perfModel->IS_stage = n_IS_stage;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_IS_stage + perfModel->divider_u.getDelay();
+uint64_t divDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_IS_stage + divDelay;
+perfModel->setDividerInstrumentation(divDelay);
 // EX_substage_div
 uint64_t n_EX_substage_div = n_DIVU;
 perfModel->EX_substage_div = n_EX_substage_div;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_div, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_div, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_div, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -5366,7 +6582,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -5386,6 +6604,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5405,7 +6624,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5437,24 +6667,30 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_lCtrl, "LOAD", "EX_substage_lCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_lCtrl});
 perfModel->IS_stage = n_IS_stage;
 // LCtrl
 uint64_t n_LCtrl;
 n_LCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_LCtrl, perfModel->EX_substage_dCache, "LOAD", "EX_substage_dCache");
 // EX_substage_lCtrl
 uint64_t n_EX_substage_lCtrl;
 n_EX_substage_lCtrl = std::max({n_LCtrl, perfModel->EX_substage_dCache});
 perfModel->EX_substage_lCtrl = n_EX_substage_lCtrl;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX_substage_lCtrl + perfModel->dCacheModel.getDelay();
+uint64_t dDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX_substage_lCtrl + dDelay;
+perfModel->setDCacheInstrumentation(perfModel->dCacheModel.getInfo_miss() == "1", perfModel->isDCacheAddressNotCacheable(), dDelay);
+perfModel->recordEXSubpipeReady(n_DCache, perfModel->EX_substage_lUnit, "LOAD", "EX_substage_lUnit");
 // EX_substage_dCache
 uint64_t n_EX_substage_dCache;
 n_EX_substage_dCache = std::max({n_DCache, perfModel->EX_substage_lUnit});
@@ -5468,7 +6704,11 @@ uint64_t n_EX_substage_lUnit = n_LUnit;
 perfModel->EX_substage_lUnit = n_EX_substage_lUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_lUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_lUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_lUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -5476,7 +6716,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -5496,6 +6738,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5515,7 +6758,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5547,24 +6801,30 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_lCtrl, "LOAD", "EX_substage_lCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_lCtrl});
 perfModel->IS_stage = n_IS_stage;
 // LCtrl
 uint64_t n_LCtrl;
 n_LCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_LCtrl, perfModel->EX_substage_dCache, "LOAD", "EX_substage_dCache");
 // EX_substage_lCtrl
 uint64_t n_EX_substage_lCtrl;
 n_EX_substage_lCtrl = std::max({n_LCtrl, perfModel->EX_substage_dCache});
 perfModel->EX_substage_lCtrl = n_EX_substage_lCtrl;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX_substage_lCtrl + perfModel->dCacheModel.getDelay();
+uint64_t dDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX_substage_lCtrl + dDelay;
+perfModel->setDCacheInstrumentation(perfModel->dCacheModel.getInfo_miss() == "1", perfModel->isDCacheAddressNotCacheable(), dDelay);
+perfModel->recordEXSubpipeReady(n_DCache, perfModel->EX_substage_lUnit, "LOAD", "EX_substage_lUnit");
 // EX_substage_dCache
 uint64_t n_EX_substage_dCache;
 n_EX_substage_dCache = std::max({n_DCache, perfModel->EX_substage_lUnit});
@@ -5578,7 +6838,11 @@ uint64_t n_EX_substage_lUnit = n_LUnit;
 perfModel->EX_substage_lUnit = n_EX_substage_lUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_lUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_lUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_lUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -5586,7 +6850,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -5606,6 +6872,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5625,7 +6892,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5657,24 +6935,30 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_lCtrl, "LOAD", "EX_substage_lCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_lCtrl});
 perfModel->IS_stage = n_IS_stage;
 // LCtrl
 uint64_t n_LCtrl;
 n_LCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_LCtrl, perfModel->EX_substage_dCache, "LOAD", "EX_substage_dCache");
 // EX_substage_lCtrl
 uint64_t n_EX_substage_lCtrl;
 n_EX_substage_lCtrl = std::max({n_LCtrl, perfModel->EX_substage_dCache});
 perfModel->EX_substage_lCtrl = n_EX_substage_lCtrl;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX_substage_lCtrl + perfModel->dCacheModel.getDelay();
+uint64_t dDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX_substage_lCtrl + dDelay;
+perfModel->setDCacheInstrumentation(perfModel->dCacheModel.getInfo_miss() == "1", perfModel->isDCacheAddressNotCacheable(), dDelay);
+perfModel->recordEXSubpipeReady(n_DCache, perfModel->EX_substage_lUnit, "LOAD", "EX_substage_lUnit");
 // EX_substage_dCache
 uint64_t n_EX_substage_dCache;
 n_EX_substage_dCache = std::max({n_DCache, perfModel->EX_substage_lUnit});
@@ -5688,7 +6972,11 @@ uint64_t n_EX_substage_lUnit = n_LUnit;
 perfModel->EX_substage_lUnit = n_EX_substage_lUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_lUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_lUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_lUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -5696,7 +6984,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -5716,6 +7006,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5735,7 +7026,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5767,24 +7069,30 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_lCtrl, "LOAD", "EX_substage_lCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_lCtrl});
 perfModel->IS_stage = n_IS_stage;
 // LCtrl
 uint64_t n_LCtrl;
 n_LCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_LCtrl, perfModel->EX_substage_dCache, "LOAD", "EX_substage_dCache");
 // EX_substage_lCtrl
 uint64_t n_EX_substage_lCtrl;
 n_EX_substage_lCtrl = std::max({n_LCtrl, perfModel->EX_substage_dCache});
 perfModel->EX_substage_lCtrl = n_EX_substage_lCtrl;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX_substage_lCtrl + perfModel->dCacheModel.getDelay();
+uint64_t dDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX_substage_lCtrl + dDelay;
+perfModel->setDCacheInstrumentation(perfModel->dCacheModel.getInfo_miss() == "1", perfModel->isDCacheAddressNotCacheable(), dDelay);
+perfModel->recordEXSubpipeReady(n_DCache, perfModel->EX_substage_lUnit, "LOAD", "EX_substage_lUnit");
 // EX_substage_dCache
 uint64_t n_EX_substage_dCache;
 n_EX_substage_dCache = std::max({n_DCache, perfModel->EX_substage_lUnit});
@@ -5798,7 +7106,11 @@ uint64_t n_EX_substage_lUnit = n_LUnit;
 perfModel->EX_substage_lUnit = n_EX_substage_lUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_lUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_lUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_lUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -5806,7 +7118,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -5826,6 +7140,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5845,7 +7160,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5877,24 +7203,30 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_lCtrl, "LOAD", "EX_substage_lCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_lCtrl});
 perfModel->IS_stage = n_IS_stage;
 // LCtrl
 uint64_t n_LCtrl;
 n_LCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_LCtrl, perfModel->EX_substage_dCache, "LOAD", "EX_substage_dCache");
 // EX_substage_lCtrl
 uint64_t n_EX_substage_lCtrl;
 n_EX_substage_lCtrl = std::max({n_LCtrl, perfModel->EX_substage_dCache});
 perfModel->EX_substage_lCtrl = n_EX_substage_lCtrl;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX_substage_lCtrl + perfModel->dCacheModel.getDelay();
+uint64_t dDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX_substage_lCtrl + dDelay;
+perfModel->setDCacheInstrumentation(perfModel->dCacheModel.getInfo_miss() == "1", perfModel->isDCacheAddressNotCacheable(), dDelay);
+perfModel->recordEXSubpipeReady(n_DCache, perfModel->EX_substage_lUnit, "LOAD", "EX_substage_lUnit");
 // EX_substage_dCache
 uint64_t n_EX_substage_dCache;
 n_EX_substage_dCache = std::max({n_DCache, perfModel->EX_substage_lUnit});
@@ -5908,7 +7240,11 @@ uint64_t n_EX_substage_lUnit = n_LUnit;
 perfModel->EX_substage_lUnit = n_EX_substage_lUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_lUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_lUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_lUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -5916,7 +7252,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -5936,6 +7274,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -5955,7 +7294,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -5987,24 +7337,30 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_lCtrl, "LOAD", "EX_substage_lCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_lCtrl});
 perfModel->IS_stage = n_IS_stage;
 // LCtrl
 uint64_t n_LCtrl;
 n_LCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_LCtrl, perfModel->EX_substage_dCache, "LOAD", "EX_substage_dCache");
 // EX_substage_lCtrl
 uint64_t n_EX_substage_lCtrl;
 n_EX_substage_lCtrl = std::max({n_LCtrl, perfModel->EX_substage_dCache});
 perfModel->EX_substage_lCtrl = n_EX_substage_lCtrl;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX_substage_lCtrl + perfModel->dCacheModel.getDelay();
+uint64_t dDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX_substage_lCtrl + dDelay;
+perfModel->setDCacheInstrumentation(perfModel->dCacheModel.getInfo_miss() == "1", perfModel->isDCacheAddressNotCacheable(), dDelay);
+perfModel->recordEXSubpipeReady(n_DCache, perfModel->EX_substage_lUnit, "LOAD", "EX_substage_lUnit");
 // EX_substage_dCache
 uint64_t n_EX_substage_dCache;
 n_EX_substage_dCache = std::max({n_DCache, perfModel->EX_substage_lUnit});
@@ -6018,7 +7374,11 @@ uint64_t n_EX_substage_lUnit = n_LUnit;
 perfModel->EX_substage_lUnit = n_EX_substage_lUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_lUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_lUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_lUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -6026,7 +7386,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -6046,6 +7408,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -6065,7 +7428,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -6097,24 +7471,30 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_Clobber
 uint64_t n_uA_Clobber;
-n_uA_Clobber = std::max({n_ID_stage, perfModel->clobberModel.getCb_out()});
+n_uA_Clobber = std::max({n_ID_stage, perfModel->getClobberReady(n_ID_stage)});
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_lCtrl, "LOAD", "EX_substage_lCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_Clobber, n_uA_OF_A, perfModel->EX_stage.get(8), perfModel->EX_substage_lCtrl});
 perfModel->IS_stage = n_IS_stage;
 // LCtrl
 uint64_t n_LCtrl;
 n_LCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_LCtrl, perfModel->EX_substage_dCache, "LOAD", "EX_substage_dCache");
 // EX_substage_lCtrl
 uint64_t n_EX_substage_lCtrl;
 n_EX_substage_lCtrl = std::max({n_LCtrl, perfModel->EX_substage_dCache});
 perfModel->EX_substage_lCtrl = n_EX_substage_lCtrl;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX_substage_lCtrl + perfModel->dCacheModel.getDelay();
+uint64_t dDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX_substage_lCtrl + dDelay;
+perfModel->setDCacheInstrumentation(perfModel->dCacheModel.getInfo_miss() == "1", perfModel->isDCacheAddressNotCacheable(), dDelay);
+perfModel->recordEXSubpipeReady(n_DCache, perfModel->EX_substage_lUnit, "LOAD", "EX_substage_lUnit");
 // EX_substage_dCache
 uint64_t n_EX_substage_dCache;
 n_EX_substage_dCache = std::max({n_DCache, perfModel->EX_substage_lUnit});
@@ -6128,7 +7508,11 @@ uint64_t n_EX_substage_lUnit = n_LUnit;
 perfModel->EX_substage_lUnit = n_EX_substage_lUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_lUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_lUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_lUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
@@ -6136,7 +7520,9 @@ n_Commit = n_EX_stage + 1;
 perfModel->clobberModel.setCb_in(n_Commit);
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -6156,6 +7542,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -6175,7 +7562,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -6207,17 +7605,20 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_sCtrl, "STORE", "EX_substage_sCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_sCtrl});
 perfModel->IS_stage = n_IS_stage;
 // SCtrl
 uint64_t n_SCtrl;
 n_SCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_SCtrl, perfModel->EX_substage_sUnit, "STORE", "EX_substage_sUnit");
 // EX_substage_sCtrl
 uint64_t n_EX_substage_sCtrl;
 n_EX_substage_sCtrl = std::max({n_SCtrl, perfModel->EX_substage_sUnit});
@@ -6230,14 +7631,20 @@ uint64_t n_EX_substage_sUnit = n_SUnit;
 perfModel->EX_substage_sUnit = n_EX_substage_sUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_sUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_sUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_sUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -6257,6 +7664,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -6276,7 +7684,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -6308,17 +7727,20 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_sCtrl, "STORE", "EX_substage_sCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_sCtrl});
 perfModel->IS_stage = n_IS_stage;
 // SCtrl
 uint64_t n_SCtrl;
 n_SCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_SCtrl, perfModel->EX_substage_sUnit, "STORE", "EX_substage_sUnit");
 // EX_substage_sCtrl
 uint64_t n_EX_substage_sCtrl;
 n_EX_substage_sCtrl = std::max({n_SCtrl, perfModel->EX_substage_sUnit});
@@ -6331,14 +7753,20 @@ uint64_t n_EX_substage_sUnit = n_SUnit;
 perfModel->EX_substage_sUnit = n_EX_substage_sUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_sUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_sUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_sUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -6358,6 +7786,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -6377,7 +7806,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -6409,17 +7849,20 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_sCtrl, "STORE", "EX_substage_sCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_sCtrl});
 perfModel->IS_stage = n_IS_stage;
 // SCtrl
 uint64_t n_SCtrl;
 n_SCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_SCtrl, perfModel->EX_substage_sUnit, "STORE", "EX_substage_sUnit");
 // EX_substage_sCtrl
 uint64_t n_EX_substage_sCtrl;
 n_EX_substage_sCtrl = std::max({n_SCtrl, perfModel->EX_substage_sUnit});
@@ -6432,14 +7875,20 @@ uint64_t n_EX_substage_sUnit = n_SUnit;
 perfModel->EX_substage_sUnit = n_EX_substage_sUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_sUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_sUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_sUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }
@@ -6459,6 +7908,7 @@ n_PCGen = n_Enter + 1;
 // uA_PcCorrect
 uint64_t n_uA_PcCorrect;
 n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+perfModel->setBranchRedirectWait(n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0);
 // uA_CacheBlock
 uint64_t n_uA_CacheBlock;
 n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
@@ -6478,7 +7928,18 @@ n_IF_substage_0 = std::max({n_ICacheCtrl, n_uA_PcPredict, perfModel->IF_substage
 perfModel->IF_substage_0 = n_IF_substage_0;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_IF_substage_0 + perfModel->iCacheModel.getDelay();
+uint64_t iDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_IF_substage_0 + iDelay;
+uint64_t pcCorrectWait = n_uA_PcCorrect > n_Enter ? n_uA_PcCorrect - n_Enter : 0;
+uint64_t cacheBlockWait = n_uA_CacheBlock > n_Enter ? n_uA_CacheBlock - n_Enter : 0;
+uint64_t ifCapacityWait = perfModel->IF_stage.get(3) > n_PCGen ? perfModel->IF_stage.get(3) - n_PCGen : 0;
+uint64_t frontendWait = std::max({pcCorrectWait, cacheBlockWait, ifCapacityWait});
+std::string frontendWaitType = "none";
+if(frontendWait > 0)
+{
+  frontendWaitType = pcCorrectWait == frontendWait ? "pcCorrectWait" : (cacheBlockWait == frontendWait ? "cacheBlockWait" : "ifCapacityWait");
+}
+perfModel->setICacheInstrumentation(perfModel->iCacheModel.getInfo_miss() == "1", iDelay, frontendWait, frontendWaitType);
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF_substage_1
 uint64_t n_IF_substage_1;
@@ -6510,17 +7971,20 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_Issue = n_ID_stage;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_ID_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_ID_stage, perfModel->getRawReadyA(n_ID_stage)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_ID_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_ID_stage, perfModel->getRawReadyB(n_ID_stage)});
 // IS_stage
+uint64_t n_EXSubpipeBase = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B});
+perfModel->recordEXSubpipeReady(n_EXSubpipeBase, perfModel->EX_substage_sCtrl, "STORE", "EX_substage_sCtrl");
 uint64_t n_IS_stage;
 n_IS_stage = std::max({n_Issue, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage.get(8), perfModel->EX_substage_sCtrl});
 perfModel->IS_stage = n_IS_stage;
 // SCtrl
 uint64_t n_SCtrl;
 n_SCtrl = n_IS_stage + 1;
+perfModel->recordEXSubpipeReady(n_SCtrl, perfModel->EX_substage_sUnit, "STORE", "EX_substage_sUnit");
 // EX_substage_sCtrl
 uint64_t n_EX_substage_sCtrl;
 n_EX_substage_sCtrl = std::max({n_SCtrl, perfModel->EX_substage_sUnit});
@@ -6533,14 +7997,20 @@ uint64_t n_EX_substage_sUnit = n_SUnit;
 perfModel->EX_substage_sUnit = n_EX_substage_sUnit;
 // EX_stage
 uint64_t n_EX_stage;
-n_EX_stage = std::max({n_EX_substage_sUnit, perfModel->EX_stage.get(1), perfModel->COM_stage.get(2)});
+uint64_t n_EXOutputReady = perfModel->EX_stage.get(1);
+uint64_t n_COMBackpressureReady = perfModel->COM_stage.get(2);
+uint64_t n_COMBackpressureBase = std::max({n_EX_substage_sUnit, n_EXOutputReady});
+perfModel->recordCommitBackpressure(n_COMBackpressureBase, n_COMBackpressureReady);
+n_EX_stage = std::max({n_EX_substage_sUnit, n_EXOutputReady, n_COMBackpressureReady});
 perfModel->EX_stage.set(n_EX_stage);
 // Commit
 uint64_t n_Commit;
 n_Commit = n_EX_stage + 1;
 // COM_stage
 uint64_t n_COM_stage;
-n_COM_stage = std::max({n_Commit, perfModel->COM_stage.get(1)});
+uint64_t n_COMCapacityReady = perfModel->COM_stage.get(1);
+perfModel->recordCommitCapacity(n_Commit, n_COMCapacityReady);
+n_COM_stage = std::max({n_Commit, n_COMCapacityReady});
 perfModel->COM_stage.set(n_COM_stage);
 
   }

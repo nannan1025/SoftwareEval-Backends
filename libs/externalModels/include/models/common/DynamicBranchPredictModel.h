@@ -74,7 +74,7 @@ public:
 
     void setPc_p(int);
     void setPc_np(int);
-    int getPc(void);
+    uint64_t getPc(void);
     
 private:
     int pc_p = 0;

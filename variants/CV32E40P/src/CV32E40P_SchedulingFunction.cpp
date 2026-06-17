@@ -1,5 +1,5 @@
 /*
-* Copyright 2025 Chair of EDA, Technical University of Munich
+* Copyright 2026 Chair of EDA, Technical University of Munich
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -56,10 +56,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -103,10 +103,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -150,10 +150,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -197,10 +197,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -244,10 +244,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -291,10 +291,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -338,10 +338,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -385,10 +385,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -432,10 +432,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -479,10 +479,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -526,7 +526,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -570,7 +570,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -614,7 +614,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -658,7 +658,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -702,7 +702,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -746,7 +746,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -790,7 +790,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -834,7 +834,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -878,7 +878,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -1004,10 +1004,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -1015,6 +1015,7 @@ perfModel->ID_stage = n_ID_stage;
 // MUL
 uint64_t n_MUL;
 n_MUL = n_ID_stage + 1;
+perfModel->setMultiplierDelay(0);
 perfModel->regModel.setXd(n_MUL);
 // EX_stage
 uint64_t n_EX_stage = n_MUL;
@@ -1051,10 +1052,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -1062,6 +1063,7 @@ perfModel->ID_stage = n_ID_stage;
 // MULH
 uint64_t n_MULH;
 n_MULH = n_ID_stage + 5;
+perfModel->setMultiplierDelay(4);
 perfModel->regModel.setXd(n_MULH);
 // EX_stage
 uint64_t n_EX_stage = n_MULH;
@@ -1098,10 +1100,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -1109,6 +1111,7 @@ perfModel->ID_stage = n_ID_stage;
 // MULH
 uint64_t n_MULH;
 n_MULH = n_ID_stage + 5;
+perfModel->setMultiplierDelay(4);
 perfModel->regModel.setXd(n_MULH);
 // EX_stage
 uint64_t n_EX_stage = n_MULH;
@@ -1145,10 +1148,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -1156,6 +1159,7 @@ perfModel->ID_stage = n_ID_stage;
 // MULH
 uint64_t n_MULH;
 n_MULH = n_ID_stage + 5;
+perfModel->setMultiplierDelay(4);
 perfModel->regModel.setXd(n_MULH);
 // EX_stage
 uint64_t n_EX_stage = n_MULH;
@@ -1192,17 +1196,19 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
 perfModel->ID_stage = n_ID_stage;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_ID_stage + perfModel->divider.getDelay();
+uint64_t divDelay = perfModel->divider.getDelay();
+n_DIV = n_ID_stage + divDelay;
+perfModel->setDividerDelay(divDelay > 0 ? divDelay - 1 : 0);
 perfModel->regModel.setXd(n_DIV);
 // EX_stage
 uint64_t n_EX_stage = n_DIV;
@@ -1239,17 +1245,19 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
 perfModel->ID_stage = n_ID_stage;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_ID_stage + perfModel->divider.getDelay();
+uint64_t divDelay = perfModel->divider.getDelay();
+n_DIV = n_ID_stage + divDelay;
+perfModel->setDividerDelay(divDelay > 0 ? divDelay - 1 : 0);
 perfModel->regModel.setXd(n_DIV);
 // EX_stage
 uint64_t n_EX_stage = n_DIV;
@@ -1286,17 +1294,19 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
 perfModel->ID_stage = n_ID_stage;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_ID_stage + perfModel->divider_u.getDelay();
+uint64_t divDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_ID_stage + divDelay;
+perfModel->setDividerDelay(divDelay > 0 ? divDelay - 1 : 0);
 perfModel->regModel.setXd(n_DIVU);
 // EX_stage
 uint64_t n_EX_stage = n_DIVU;
@@ -1333,17 +1343,19 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
 perfModel->ID_stage = n_ID_stage;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_ID_stage + perfModel->divider_u.getDelay();
+uint64_t divDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_ID_stage + divDelay;
+perfModel->setDividerDelay(divDelay > 0 ? divDelay - 1 : 0);
 perfModel->regModel.setXd(n_DIVU);
 // EX_stage
 uint64_t n_EX_stage = n_DIVU;
@@ -1380,7 +1392,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -1424,7 +1436,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -1468,7 +1480,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -1635,10 +1647,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -1646,6 +1658,8 @@ perfModel->ID_stage = n_ID_stage;
 // LSU
 uint64_t n_LSU;
 n_LSU = n_ID_stage + 1;
+uint64_t memoryWait = perfModel->WB_stage > n_LSU ? perfModel->WB_stage - n_LSU : 0;
+perfModel->setMemoryPortInstrumentation(memoryWait, "DPort_W");
 // EX_stage
 uint64_t n_EX_stage;
 n_EX_stage = std::max({n_LSU, perfModel->WB_stage});
@@ -1688,10 +1702,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -1699,6 +1713,8 @@ perfModel->ID_stage = n_ID_stage;
 // LSU
 uint64_t n_LSU;
 n_LSU = n_ID_stage + 1;
+uint64_t memoryWait = perfModel->WB_stage > n_LSU ? perfModel->WB_stage - n_LSU : 0;
+perfModel->setMemoryPortInstrumentation(memoryWait, "DPort_W");
 // EX_stage
 uint64_t n_EX_stage;
 n_EX_stage = std::max({n_LSU, perfModel->WB_stage});
@@ -1741,10 +1757,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -1752,6 +1768,8 @@ perfModel->ID_stage = n_ID_stage;
 // LSU
 uint64_t n_LSU;
 n_LSU = n_ID_stage + 1;
+uint64_t memoryWait = perfModel->WB_stage > n_LSU ? perfModel->WB_stage - n_LSU : 0;
+perfModel->setMemoryPortInstrumentation(memoryWait, "DPort_W");
 // EX_stage
 uint64_t n_EX_stage;
 n_EX_stage = std::max({n_LSU, perfModel->WB_stage});
@@ -1794,7 +1812,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -1802,6 +1820,8 @@ perfModel->ID_stage = n_ID_stage;
 // LSU
 uint64_t n_LSU;
 n_LSU = n_ID_stage + 1;
+uint64_t memoryWait = perfModel->WB_stage > n_LSU ? perfModel->WB_stage - n_LSU : 0;
+perfModel->setMemoryPortInstrumentation(memoryWait, "DPort_R");
 // EX_stage
 uint64_t n_EX_stage;
 n_EX_stage = std::max({n_LSU, perfModel->WB_stage});
@@ -1845,7 +1865,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -1853,6 +1873,8 @@ perfModel->ID_stage = n_ID_stage;
 // LSU
 uint64_t n_LSU;
 n_LSU = n_ID_stage + 1;
+uint64_t memoryWait = perfModel->WB_stage > n_LSU ? perfModel->WB_stage - n_LSU : 0;
+perfModel->setMemoryPortInstrumentation(memoryWait, "DPort_R");
 // EX_stage
 uint64_t n_EX_stage;
 n_EX_stage = std::max({n_LSU, perfModel->WB_stage});
@@ -1896,7 +1918,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -1904,6 +1926,8 @@ perfModel->ID_stage = n_ID_stage;
 // LSU
 uint64_t n_LSU;
 n_LSU = n_ID_stage + 1;
+uint64_t memoryWait = perfModel->WB_stage > n_LSU ? perfModel->WB_stage - n_LSU : 0;
+perfModel->setMemoryPortInstrumentation(memoryWait, "DPort_R");
 // EX_stage
 uint64_t n_EX_stage;
 n_EX_stage = std::max({n_LSU, perfModel->WB_stage});
@@ -1947,7 +1971,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -1955,6 +1979,8 @@ perfModel->ID_stage = n_ID_stage;
 // LSU
 uint64_t n_LSU;
 n_LSU = n_ID_stage + 1;
+uint64_t memoryWait = perfModel->WB_stage > n_LSU ? perfModel->WB_stage - n_LSU : 0;
+perfModel->setMemoryPortInstrumentation(memoryWait, "DPort_R");
 // EX_stage
 uint64_t n_EX_stage;
 n_EX_stage = std::max({n_LSU, perfModel->WB_stage});
@@ -1998,7 +2024,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, perfModel->EX_stage});
@@ -2006,6 +2032,8 @@ perfModel->ID_stage = n_ID_stage;
 // LSU
 uint64_t n_LSU;
 n_LSU = n_ID_stage + 1;
+uint64_t memoryWait = perfModel->WB_stage > n_LSU ? perfModel->WB_stage - n_LSU : 0;
+perfModel->setMemoryPortInstrumentation(memoryWait, "DPort_R");
 // EX_stage
 uint64_t n_EX_stage;
 n_EX_stage = std::max({n_LSU, perfModel->WB_stage});
@@ -2049,10 +2077,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -2061,6 +2089,9 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_ALU;
 n_ALU = n_ID_stage + 1;
 perfModel->staBranchPredModel.setPc_np(n_ALU);
+{
+  perfModel->setBranchInstrumentation(true, true, true, n_ALU > n_IF_stage ? n_ALU - n_IF_stage : 0);
+}
 // EX_stage
 uint64_t n_EX_stage = n_ALU;
 perfModel->EX_stage = n_EX_stage;
@@ -2096,10 +2127,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -2108,6 +2139,9 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_ALU;
 n_ALU = n_ID_stage + 1;
 perfModel->staBranchPredModel.setPc_np(n_ALU);
+{
+  perfModel->setBranchInstrumentation(true, true, true, n_ALU > n_IF_stage ? n_ALU - n_IF_stage : 0);
+}
 // EX_stage
 uint64_t n_EX_stage = n_ALU;
 perfModel->EX_stage = n_EX_stage;
@@ -2143,10 +2177,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -2155,6 +2189,9 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_ALU;
 n_ALU = n_ID_stage + 1;
 perfModel->staBranchPredModel.setPc_np(n_ALU);
+{
+  perfModel->setBranchInstrumentation(true, true, true, n_ALU > n_IF_stage ? n_ALU - n_IF_stage : 0);
+}
 // EX_stage
 uint64_t n_EX_stage = n_ALU;
 perfModel->EX_stage = n_EX_stage;
@@ -2190,10 +2227,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -2202,6 +2239,9 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_ALU;
 n_ALU = n_ID_stage + 1;
 perfModel->staBranchPredModel.setPc_np(n_ALU);
+{
+  perfModel->setBranchInstrumentation(true, true, true, n_ALU > n_IF_stage ? n_ALU - n_IF_stage : 0);
+}
 // EX_stage
 uint64_t n_EX_stage = n_ALU;
 perfModel->EX_stage = n_EX_stage;
@@ -2237,10 +2277,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -2249,6 +2289,9 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_ALU;
 n_ALU = n_ID_stage + 1;
 perfModel->staBranchPredModel.setPc_np(n_ALU);
+{
+  perfModel->setBranchInstrumentation(true, true, true, n_ALU > n_IF_stage ? n_ALU - n_IF_stage : 0);
+}
 // EX_stage
 uint64_t n_EX_stage = n_ALU;
 perfModel->EX_stage = n_EX_stage;
@@ -2284,10 +2327,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF_stage + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF_stage, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF_stage, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF_stage, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF_stage, perfModel->getRawReadyB(n_Decoder)});
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX_stage});
@@ -2296,6 +2339,9 @@ perfModel->ID_stage = n_ID_stage;
 uint64_t n_ALU;
 n_ALU = n_ID_stage + 1;
 perfModel->staBranchPredModel.setPc_np(n_ALU);
+{
+  perfModel->setBranchInstrumentation(true, true, true, n_ALU > n_IF_stage ? n_ALU - n_IF_stage : 0);
+}
 // EX_stage
 uint64_t n_EX_stage = n_ALU;
 perfModel->EX_stage = n_EX_stage;
@@ -2361,6 +2407,7 @@ perfModel->staBranchPredModel.setPc_np(n_JumpDecoder);
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_JumpDecoder, perfModel->EX_stage});
 perfModel->ID_stage = n_ID_stage;
+perfModel->setBranchInstrumentation(true, true, true, n_ID_stage > n_IF_stage ? n_ID_stage - n_IF_stage : 0);
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID_stage + 1;
@@ -2398,13 +2445,15 @@ perfModel->IF_stage = n_IF_stage;
 // JumpDecoder
 uint64_t n_JumpDecoder;
 uint64_t n_JumpDecoder_max;
-n_JumpDecoder_max = std::max({n_IF_stage, perfModel->regModel.getXa()});
+uint64_t n_JumpDecoderBase = n_IF_stage + 1;
+n_JumpDecoder_max = std::max({n_JumpDecoderBase, perfModel->getRawReadyA(n_JumpDecoderBase)});
 n_JumpDecoder = n_JumpDecoder_max + 1;
 perfModel->staBranchPredModel.setPc_np(n_JumpDecoder);
 // ID_stage
 uint64_t n_ID_stage;
 n_ID_stage = std::max({n_JumpDecoder, perfModel->EX_stage});
 perfModel->ID_stage = n_ID_stage;
+perfModel->setBranchInstrumentation(true, true, true, n_ID_stage > n_IF_stage ? n_ID_stage - n_IF_stage : 0);
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID_stage + 1;

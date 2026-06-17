@@ -1,0 +1,13 @@
+
+TARGET_SOURCES(SWEVAL_BACKENDS_LIB PRIVATE
+  	src/CV32E40P_CORE_Printer.cpp
+	src/CV32E40P_CORE_Channel.cpp
+	src/CV32E40P_CORE_InstructionPrinters.cpp
+	src/CV32E40P_CORE_SchedulingFunction.cpp
+	src/CV32E40P_CORE_PerformanceModel.cpp
+
+)
+
+TARGET_INCLUDE_DIRECTORIES(SWEVAL_BACKENDS_LIB PRIVATE
+include
+)

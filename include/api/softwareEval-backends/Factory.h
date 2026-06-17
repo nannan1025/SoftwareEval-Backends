@@ -30,10 +30,22 @@ class Factory
 {
 private:
   enum var_t { 
+	SIX_NFW_SPRE,
+	SHAKTI_C,
+	ROCKET,
+	CV32E40P_CORE,
+	CVA6,
 	AssemblyTrace,
-	CV32E40P,
+	CVA6_QWEN_1,
+	LAMP,
+	FOUR_NFW_NOPRE,
+	CV32E40P_LLM,
+	FIVE_NFW_NPRE,
+	FIVE_FW_DYPRE,
+	CV32E40P_QWEN_1,
+	CVA62,
 	InstructionTrace_RV64,
-	CVA6 
+	CV32E40P 
   };
 public:
   int getVariantHandle(std::string);

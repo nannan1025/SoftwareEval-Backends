@@ -1,5 +1,5 @@
 /*
-* Copyright 2025 Chair of EDA, Technical University of Munich
+* Copyright 2026 Chair of EDA, Technical University of Munich
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -89,10 +89,79 @@ public:
   cva6::DividerUnsignedModel divider_u;
   cva6::DCacheModel dCacheModel;
 
+  // Timing trace identity fields
+  uint64_t* typeId_ptr = nullptr;
+  uint64_t* rs1_ptr = nullptr;
+  uint64_t* rs2_ptr = nullptr;
+  uint64_t* rd_ptr = nullptr;
+  uint64_t* pc_ptr = nullptr;
+  uint64_t* brTarget_ptr = nullptr;
+  uint64_t* imm_ptr = nullptr;
+  uint64_t* rs1_data_ptr = nullptr;
+  uint64_t* rs2_data_ptr = nullptr;
+  uint64_t* addr_ptr = nullptr;
+  uint64_t instr_id = 0;
+  uint64_t divider_delay_cycles = 0;
+  uint64_t divider_extra_cycles = 0;
+  uint64_t icache_miss = 0;
+  uint64_t icache_delay_cycles = 0;
+  uint64_t icache_extra_cycles = 0;
+  uint64_t frontend_wait_cycles = 0;
+  uint64_t frontend_extra_cycles = 0;
+  std::string frontend_wait_type = "none";
+  uint64_t dcache_miss = 0;
+  uint64_t dcache_not_cacheable = 0;
+  uint64_t dcache_delay_cycles = 0;
+  uint64_t dcache_extra_cycles = 0;
+  uint64_t memory_wait_cycles = 0;
+  uint64_t branch_is_control = 0;
+  uint64_t branch_taken = 0;
+  uint64_t branch_predicted_taken = 0;
+  uint64_t branch_mispredict = 0;
+  uint64_t branch_predicted_target = 0;
+  uint64_t branch_actual_target = 0;
+  uint64_t branch_redirect_cycles = 0;
+  uint64_t branch_predict_path_cycles = 0;
+  std::string branch_predictor_component = "none";
+  uint64_t branch_redirect_source_pc = 0;
+  uint64_t branch_redirect_source_type_id = 0;
+  std::string branch_redirect_source_component = "none";
+  uint64_t raw_wait_cycles = 0;
+  int64_t raw_blocking_reg = -1;
+  uint64_t raw_blocking_ready_cycle = 0;
+  std::string raw_blocking_operand = "none";
+  uint64_t ex_subpipe_wait_cycles = 0;
+  std::string ex_subpipe_kind = "none";
+  std::string ex_blocking_resource = "none";
+  uint64_t ex_blocking_ready_cycle = 0;
+  uint64_t clobber_wait_cycles = 0;
+  int64_t clobber_blocking_reg = -1;
+  uint64_t clobber_blocking_ready_cycle = 0;
+  uint64_t commit_backpressure_wait_cycles = 0;
+  uint64_t commit_capacity_wait_cycles = 0;
+  uint64_t commit_wait_cycles = 0;
+  std::string commit_wait_kind = "none";
+  uint64_t commit_blocking_ready_cycle = 0;
+  uint64_t commit_base_cycle = 0;
+
   virtual void connectChannel(Channel*);
   virtual uint64_t getCycleCount(void);
   virtual std::string getPipelineStream(void);
   virtual std::string getPrintHeader(void);
+  void setDividerInstrumentation(uint64_t rawDelayCycles);
+  void setICacheInstrumentation(bool isMiss, uint64_t rawDelayCycles, uint64_t frontendWaitCycles, const std::string& frontendWaitType);
+  void setDCacheInstrumentation(bool isMiss, bool isNotCacheable, uint64_t rawDelayCycles);
+  void setBranchInstrumentation(uint64_t typeId, int streamInstrIndex);
+  void setBranchRedirectWait(uint64_t waitCycles);
+  void recordRawReady(uint64_t readyCycle, uint64_t baseCycle, uint64_t reg, const std::string& operand);
+  uint64_t getRawReadyA(uint64_t baseCycle);
+  uint64_t getRawReadyB(uint64_t baseCycle);
+  void setEXSubpipeInstrumentation(uint64_t waitCycles, const std::string& kind, const std::string& blockingResource, uint64_t blockingReadyCycle);
+  void recordEXSubpipeReady(uint64_t issueReadyBase, uint64_t readyCycle, const std::string& kind, const std::string& blockingResource);
+  uint64_t getClobberReady(uint64_t baseCycle);
+  void recordCommitBackpressure(uint64_t baseCycle, uint64_t readyCycle);
+  void recordCommitCapacity(uint64_t baseCycle, uint64_t readyCycle);
+  bool isDCacheAddressNotCacheable(void);
 
 };
 

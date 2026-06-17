@@ -109,6 +109,19 @@ void BranchTargetBuffer::update(uint64_t pc_, uint64_t taddr_)
   tab[getPageIndex(pc_)][getRowIndex(pc_)].addr = taddr_;
 }
 
+void BranchPredictionModel::clearTraceInfo(void)
+{
+  trace_isControl = false;
+  trace_taken = false;
+  trace_predictedTaken = false;
+  trace_mispredict = false;
+  trace_predictedTarget = 0;
+  trace_actualTarget = 0;
+  trace_predictorComponent = "none";
+  trace_redirectSourcePc = 0;
+  trace_redirectSourceTypeId = 0;
+  trace_redirectSourceComponent = "none";
+}
 
 void BranchPredictionModel::setPc_p(uint64_t pc_p_)
 {
@@ -116,12 +129,32 @@ void BranchPredictionModel::setPc_p(uint64_t pc_p_)
   branchPc = pc_ptr[getInstrIndex()];
   branchTarget = brTarget_ptr[getInstrIndex()];
   branchPredictedTaken = bht.getPrediction(branchPc, imm_ptr[getInstrIndex()]);
+  trace_isControl = true;
+  trace_taken = false;
+  trace_predictedTaken = branchPredictedTaken;
+  trace_mispredict = false;
+  trace_predictedTarget = branchPredictedTaken ? branchTarget : 0;
+  trace_actualTarget = 0;
+  trace_predictorComponent = "BHT";
+  pendingSourcePc = branchPc;
+  pendingSourceTypeId = typeId_ptr[getInstrIndex()];
+  pendingSourceComponent = "BHT";
   t_pc_pt = pc_p_;  
 }
 
 void BranchPredictionModel::setPc_p_j(uint64_t pc_p_)
 {
   jump_flag = true;
+  trace_isControl = true;
+  trace_taken = true;
+  trace_predictedTaken = true;
+  trace_mispredict = false;
+  trace_predictedTarget = brTarget_ptr[getInstrIndex()];
+  trace_actualTarget = brTarget_ptr[getInstrIndex()];
+  trace_predictorComponent = "JAL";
+  pendingSourcePc = pc_ptr[getInstrIndex()];
+  pendingSourceTypeId = typeId_ptr[getInstrIndex()];
+  pendingSourceComponent = "JAL";
 
   if(isCall())
   {
@@ -160,6 +193,17 @@ void BranchPredictionModel::setPc_p_jr(uint64_t pc_p_)
     branchTarget = btb.getPrediction(branchPc);
   }
 
+  trace_isControl = true;
+  trace_taken = true;
+  trace_predictedTaken = (branchTarget != INVALID_BRANCH_ADDRESS);
+  trace_mispredict = false;
+  trace_predictedTarget = (branchTarget != INVALID_BRANCH_ADDRESS) ? branchTarget : 0;
+  trace_actualTarget = 0;
+  trace_predictorComponent = return_flag ? "RAS" : ((branchTarget != INVALID_BRANCH_ADDRESS) ? "BTB" : "JALR");
+  pendingSourcePc = pc_ptr[getInstrIndex()];
+  pendingSourceTypeId = typeId_ptr[getInstrIndex()];
+  pendingSourceComponent = trace_predictorComponent;
+
   t_pc_pt = pc_p_;
 }
 
@@ -169,6 +213,7 @@ uint64_t BranchPredictionModel::getPc_mp(void)
 {
   isMispredict = false;
   isTaken = false;
+  clearTraceInfo();
   
   // Check if previous instr was a branch
   if(branch_flag)
@@ -179,7 +224,6 @@ uint64_t BranchPredictionModel::getPc_mp(void)
     
     // Determine if branch was mispredicted
     isMispredict = branchPredictedTaken != isTaken;
-    
     // Update BHT
     if(isTaken | isMispredict)
     {
@@ -189,6 +233,9 @@ uint64_t BranchPredictionModel::getPc_mp(void)
     // In case of mispredict: Return time when corrected address is available (t_pc_mp)
     if(isMispredict)
     {
+      trace_redirectSourcePc = pendingSourcePc;
+      trace_redirectSourceTypeId = pendingSourceTypeId;
+      trace_redirectSourceComponent = pendingSourceComponent;
       return t_pc_mp;
     }
   }
@@ -208,7 +255,6 @@ uint64_t BranchPredictionModel::getPc_mp(void)
     // Determine if branch was mispredicted
     uint64_t curPc = pc_ptr[getInstrIndex()];
     isMispredict = (curPc != branchTarget);
-
     // Update BTB
     if(isMispredict & !return_flag)
     {
@@ -218,6 +264,9 @@ uint64_t BranchPredictionModel::getPc_mp(void)
     // On mispredict: Return time when corrected address is available (t_pc_mp)
     if(isMispredict)
     {
+      trace_redirectSourcePc = pendingSourcePc;
+      trace_redirectSourceTypeId = pendingSourceTypeId;
+      trace_redirectSourceComponent = pendingSourceComponent;
       return t_pc_mp;
     }
   }

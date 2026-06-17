@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <array>
 #include <cstdint>
+#include <string>
 
 #include "PerformanceModel.h"
 
@@ -115,6 +116,18 @@ public:
   //std::string getInfo_predictedTaken(void) { return std::to_string(branchPredictedTaken); };
   //std::string getInfo_pc_pt(void) { return std::to_string(t_pc_pt); };
   //std::string getInfo_pc_mp(void) { return std::to_string(t_pc_mp); };
+
+  uint64_t getTrace_isControl(void) { return trace_isControl ? 1 : 0; };
+  uint64_t getTrace_taken(void) { return trace_taken ? 1 : 0; };
+  uint64_t getTrace_predictedTaken(void) { return trace_predictedTaken ? 1 : 0; };
+  uint64_t getTrace_mispredict(void) { return trace_mispredict ? 1 : 0; };
+  uint64_t getTrace_predictedTarget(void) { return trace_predictedTarget; };
+  uint64_t getTrace_actualTarget(void) { return trace_actualTarget; };
+  std::string getTrace_predictorComponent(void) { return trace_predictorComponent; };
+  uint64_t getTrace_redirectSourcePc(void) { return trace_redirectSourcePc; };
+  uint64_t getTrace_redirectSourceTypeId(void) { return trace_redirectSourceTypeId; };
+  std::string getTrace_redirectSourceComponent(void) { return trace_redirectSourceComponent; };
+  void clearTraceInfo(void);
   
   // Trace values
   uint64_t* pc_ptr;
@@ -122,6 +135,7 @@ public:
   uint64_t* imm_ptr;
   uint64_t* rs1_ptr;
   uint64_t* rd_ptr;
+  uint64_t* typeId_ptr;
   
 private:
   BranchHistoryTable bht;
@@ -143,6 +157,22 @@ private:
 
   bool isMispredict = false;
   bool isTaken = false;
+
+  bool trace_isControl = false;
+  bool trace_taken = false;
+  bool trace_predictedTaken = false;
+  bool trace_mispredict = false;
+  uint64_t trace_predictedTarget = 0;
+  uint64_t trace_actualTarget = 0;
+  std::string trace_predictorComponent = "none";
+
+  uint64_t trace_redirectSourcePc = 0;
+  uint64_t trace_redirectSourceTypeId = 0;
+  std::string trace_redirectSourceComponent = "none";
+
+  uint64_t pendingSourcePc = 0;
+  uint64_t pendingSourceTypeId = 0;
+  std::string pendingSourceComponent = "none";
   
   bool isCall(void) { return ( (rd_ptr[getInstrIndex()] == 1) | (rd_ptr[getInstrIndex()] == 5) ); };
   bool isReturn(void) {return ( (rs1_ptr[getInstrIndex()] != rd_ptr[getInstrIndex()]) & ((rs1_ptr[getInstrIndex()] == 1) | (rs1_ptr[getInstrIndex()] == 5)) ); };

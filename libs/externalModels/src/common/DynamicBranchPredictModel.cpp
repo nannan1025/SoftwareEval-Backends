@@ -189,7 +189,7 @@ void DynamicBranchPredictModel::setPc_np(int pc_np_)
   
 }
 
-int DynamicBranchPredictModel::getPc()
+uint64_t DynamicBranchPredictModel::getPc()
 {
   if(!branchInstr)
   {
