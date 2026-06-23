@@ -48,13 +48,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -69,20 +72,20 @@ n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
-// ADD
-uint64_t n_ADD;
-n_ADD = n_ID + 3;
-perfModel->regModel.setXd(n_ADD);
+// ALU
+uint64_t n_ALU;
+n_ALU = n_ID + 1;
+perfModel->regModel.setXd(n_ALU);
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ADD, perfModel->MEM});
+n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -114,13 +117,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -135,20 +141,20 @@ n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
-// SUB
-uint64_t n_SUB;
-n_SUB = n_ID + 3;
-perfModel->regModel.setXd(n_SUB);
+// ALU
+uint64_t n_ALU;
+n_ALU = n_ID + 1;
+perfModel->regModel.setXd(n_ALU);
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_SUB, perfModel->MEM});
+n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -160,9 +166,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_sra = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_xor = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sra",
+  "xor",
   2,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -180,13 +186,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -201,20 +210,20 @@ n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
-// SRA
-uint64_t n_SRA;
-n_SRA = n_ID + 2;
-perfModel->regModel.setXd(n_SRA);
+// ALU
+uint64_t n_ALU;
+n_ALU = n_ID + 1;
+perfModel->regModel.setXd(n_ALU);
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_SRA, perfModel->MEM});
+n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -226,9 +235,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_xor = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_or = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "xor",
+  "or",
   3,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -246,13 +255,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -275,12 +287,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -292,9 +304,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_or = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_and = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "or",
+  "and",
   4,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -312,13 +324,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -341,12 +356,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -358,9 +373,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_and = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_slt = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "and",
+  "slt",
   5,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -378,13 +393,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -407,12 +425,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -424,9 +442,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_slt = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_sltu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "slt",
+  "sltu",
   6,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -444,13 +462,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -473,12 +494,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -490,9 +511,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_sltu = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_sll = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sltu",
+  "sll",
   7,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -510,13 +531,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -539,12 +563,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -556,9 +580,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_sll = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_srl = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sll",
+  "srl",
   8,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -576,13 +600,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -605,12 +632,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -622,9 +649,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_srl = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_sra = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "srl",
+  "sra",
   9,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -642,13 +669,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -671,12 +701,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -688,9 +718,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_sraw = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_addw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sraw",
+  "addw",
   10,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -708,13 +738,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -737,12 +770,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -754,9 +787,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_addw = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_subw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "addw",
+  "subw",
   11,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -774,13 +807,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -803,12 +839,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -820,9 +856,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_subw = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_addi = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "subw",
+  "addi",
   12,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -840,13 +876,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -854,12 +893,9 @@ n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
 n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
-// uA_OF_B
-uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 // ID
 uint64_t n_ID;
-n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
+n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
 perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
@@ -869,12 +905,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -886,9 +922,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_addi = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_xori = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "addi",
+  "xori",
   13,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -906,13 +942,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -932,12 +971,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -949,9 +988,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_xori = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_ori = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "xori",
+  "ori",
   14,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -969,13 +1008,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -995,12 +1037,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1012,9 +1054,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_ori = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_andi = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "ori",
+  "andi",
   15,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1032,13 +1074,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1058,12 +1103,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1075,9 +1120,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_andi = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_slti = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "andi",
+  "slti",
   16,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1095,13 +1140,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1121,12 +1169,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1138,9 +1186,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_slti = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_sltiu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "slti",
+  "sltiu",
   17,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1158,13 +1206,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1184,12 +1235,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1201,9 +1252,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_sltiu = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_slli = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sltiu",
+  "slli",
   18,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1221,13 +1272,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1247,12 +1301,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1264,9 +1318,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_slli = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_srli = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "slli",
+  "srli",
   19,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1284,13 +1338,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1310,12 +1367,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1327,9 +1384,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_srli = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_srai = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "srli",
+  "srai",
   20,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1347,13 +1404,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1373,12 +1433,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1390,9 +1450,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_srai = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_addiw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "srai",
+  "addiw",
   21,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1410,13 +1470,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1436,12 +1499,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1453,9 +1516,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_addiw = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_slliw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "addiw",
+  "slliw",
   22,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1473,13 +1536,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1499,12 +1565,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1516,9 +1582,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_slliw = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_sraiw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "slliw",
+  "sraiw",
   23,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1536,13 +1602,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1562,12 +1631,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1579,9 +1648,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_sraiw = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_srliw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sraiw",
+  "srliw",
   24,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1599,13 +1668,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1625,12 +1697,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1642,9 +1714,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_srliw = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_auipc = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "srliw",
+  "auipc",
   25,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1662,23 +1734,23 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
-// uA_OF_A
-uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
 // ID
 uint64_t n_ID;
-n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
+n_ID = std::max({n_Decoder, perfModel->EX});
 perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
@@ -1688,12 +1760,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1705,9 +1777,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_auipc = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_lui = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "auipc",
+  "lui",
   26,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1725,13 +1797,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1748,12 +1823,12 @@ perfModel->regModel.setXd(n_ALU);
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
+n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
@@ -1765,9 +1840,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_lui = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_mul = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "lui",
+  "mul",
   27,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -1785,73 +1860,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
-perfModel->IF = n_IF;
-// Decoder
-uint64_t n_Decoder;
-n_Decoder = n_IF + 1;
-// ID
-uint64_t n_ID;
-n_ID = std::max({n_Decoder, perfModel->EX});
-perfModel->ID = n_ID;
-// ALU
-uint64_t n_ALU;
-n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
-// EX
-uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
-perfModel->EX = n_EX;
-// ALUForward
-uint64_t n_ALUForward;
-n_ALUForward = n_EX + 1;
-// MEM
-uint64_t n_MEM;
-n_MEM = std::max({n_ALUForward, perfModel->WB});
-perfModel->MEM = n_MEM;
-// Reg
-uint64_t n_Reg;
-n_Reg = n_MEM + 1;
-// WB
-uint64_t n_WB = n_Reg;
-perfModel->WB = n_WB;
-
-  }
-);
-
-static SchedulingFunction *schedulingFunction_mul = new SchedulingFunction(
-  ROCKET_SchedulingFunctionSet,
-  "mul",
-  28,
-  [](PerformanceModel* perfModel_){
-  ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
-  // Enter
-uint64_t n_Enter = perfModel->IF;
-// PC_Gen
-uint64_t n_PC_Gen;
-n_PC_Gen = n_Enter + 1;
-// uA_PcCorrect
-uint64_t n_uA_PcCorrect;
-n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
-// uA_CacheBlock
-uint64_t n_uA_CacheBlock;
-n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
-// uA_PcPredict
-uint64_t n_uA_PcPredict;
-n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
-// ICache
-uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
-perfModel->iCacheModel.setIc_in(n_ICache);
-// IF
-uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1868,7 +1886,7 @@ n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // MUL
 uint64_t n_MUL;
-n_MUL = n_ID + 3;
+n_MUL = n_ID + 1;
 perfModel->regModel.setXd(n_MUL);
 // EX
 uint64_t n_EX;
@@ -1894,7 +1912,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_mulw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "mulw",
-  29,
+  28,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -1911,13 +1929,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1932,13 +1953,13 @@ n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
-// MULW
-uint64_t n_MULW;
-n_MULW = n_ID + 3;
-perfModel->regModel.setXd(n_MULW);
+// MUL
+uint64_t n_MUL;
+n_MUL = n_ID + 1;
+perfModel->regModel.setXd(n_MUL);
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_MULW, perfModel->MEM});
+n_EX = std::max({n_MUL, perfModel->MEM});
 perfModel->EX = n_EX;
 // MEMPass
 uint64_t n_MEMPass;
@@ -1960,7 +1981,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_mulh = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "mulh",
-  30,
+  29,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -1977,13 +1998,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -1998,13 +2022,13 @@ n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
-// MULH
-uint64_t n_MULH;
-n_MULH = n_ID + 4;
-perfModel->regModel.setXd(n_MULH);
+// MUL
+uint64_t n_MUL;
+n_MUL = n_ID + 1;
+perfModel->regModel.setXd(n_MUL);
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_MULH, perfModel->MEM});
+n_EX = std::max({n_MUL, perfModel->MEM});
 perfModel->EX = n_EX;
 // MEMPass
 uint64_t n_MEMPass;
@@ -2026,7 +2050,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_mulhu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "mulhu",
-  31,
+  30,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2043,13 +2067,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2064,13 +2091,13 @@ n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
-// MULH
-uint64_t n_MULH;
-n_MULH = n_ID + 4;
-perfModel->regModel.setXd(n_MULH);
+// MUL
+uint64_t n_MUL;
+n_MUL = n_ID + 1;
+perfModel->regModel.setXd(n_MUL);
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_MULH, perfModel->MEM});
+n_EX = std::max({n_MUL, perfModel->MEM});
 perfModel->EX = n_EX;
 // MEMPass
 uint64_t n_MEMPass;
@@ -2092,7 +2119,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_mulhsu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "mulhsu",
-  32,
+  31,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2109,13 +2136,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2130,13 +2160,13 @@ n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
-// MULH
-uint64_t n_MULH;
-n_MULH = n_ID + 4;
-perfModel->regModel.setXd(n_MULH);
+// MUL
+uint64_t n_MUL;
+n_MUL = n_ID + 1;
+perfModel->regModel.setXd(n_MUL);
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_MULH, perfModel->MEM});
+n_EX = std::max({n_MUL, perfModel->MEM});
 perfModel->EX = n_EX;
 // MEMPass
 uint64_t n_MEMPass;
@@ -2158,7 +2188,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_div = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "div",
-  33,
+  32,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2175,13 +2205,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2224,7 +2257,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_rem = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "rem",
-  34,
+  33,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2241,13 +2274,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2290,7 +2326,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_divw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "divw",
-  35,
+  34,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2307,13 +2343,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2356,7 +2395,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_remw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "remw",
-  36,
+  35,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2373,13 +2412,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2422,7 +2464,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_divu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "divu",
-  37,
+  36,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2439,13 +2481,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2488,7 +2533,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_remu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "remu",
-  38,
+  37,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2505,13 +2550,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2554,7 +2602,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_divuw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "divuw",
-  39,
+  38,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2571,13 +2619,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2620,7 +2671,7 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_remuw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "remuw",
-  40,
+  39,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
   // Enter
@@ -2637,13 +2688,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2686,6 +2740,76 @@ perfModel->WB = n_WB;
 static SchedulingFunction *schedulingFunction_csrrw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
   "csrrw",
+  40,
+  [](PerformanceModel* perfModel_){
+  ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
+  // Enter
+uint64_t n_Enter = perfModel->IF;
+// PC_Gen
+uint64_t n_PC_Gen;
+n_PC_Gen = n_Enter + 1;
+// uA_PcCorrect
+uint64_t n_uA_PcCorrect;
+n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
+// uA_CacheBlock
+uint64_t n_uA_CacheBlock;
+n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
+// uA_PcPredict
+uint64_t n_uA_PcPredict;
+n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
+// ICache
+uint64_t n_ICache;
+n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+perfModel->iCacheModel.setIc_in(n_ICache);
+// IF
+uint64_t n_IF;
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
+perfModel->IF = n_IF;
+// Decoder
+uint64_t n_Decoder;
+n_Decoder = n_IF + 1;
+// uA_OF_A
+uint64_t n_uA_OF_A;
+n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+// ID
+uint64_t n_ID;
+n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
+perfModel->ID = n_ID;
+// EXPass
+uint64_t n_EXPass;
+n_EXPass = n_ID + 1;
+// EX
+uint64_t n_EX;
+n_EX = std::max({n_EXPass, perfModel->MEM});
+perfModel->EX = n_EX;
+// MEMPass
+uint64_t n_MEMPass;
+n_MEMPass = n_EX + 1;
+// MEM
+uint64_t n_MEM;
+n_MEM = std::max({n_MEMPass, perfModel->WB});
+perfModel->MEM = n_MEM;
+// CSR
+uint64_t n_CSR;
+n_CSR = n_MEM + 1;
+perfModel->regModel.setXd(n_CSR);
+// Reg
+uint64_t n_Reg;
+n_Reg = n_MEM + 1;
+// WB
+uint64_t n_WB;
+n_WB = std::max({n_CSR, n_Reg});
+perfModel->WB = n_WB;
+
+  }
+);
+
+static SchedulingFunction *schedulingFunction_csrrs = new SchedulingFunction(
+  ROCKET_SchedulingFunctionSet,
+  "csrrs",
   41,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -2703,13 +2827,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2735,20 +2862,24 @@ n_MEMPass = n_EX + 1;
 uint64_t n_MEM;
 n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
+// CSR
+uint64_t n_CSR;
+n_CSR = n_MEM + 1;
+perfModel->regModel.setXd(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
-perfModel->regModel.setXd(n_Reg);
 // WB
-uint64_t n_WB = n_Reg;
+uint64_t n_WB;
+n_WB = std::max({n_CSR, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_csrrs = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_csrrc = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "csrrs",
+  "csrrc",
   42,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -2766,13 +2897,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2798,20 +2932,24 @@ n_MEMPass = n_EX + 1;
 uint64_t n_MEM;
 n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
+// CSR
+uint64_t n_CSR;
+n_CSR = n_MEM + 1;
+perfModel->regModel.setXd(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
-perfModel->regModel.setXd(n_Reg);
 // WB
-uint64_t n_WB = n_Reg;
+uint64_t n_WB;
+n_WB = std::max({n_CSR, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_csrrc = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_csrrwi = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "csrrc",
+  "csrrwi",
   43,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -2829,23 +2967,23 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
-// uA_OF_A
-uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
 // ID
 uint64_t n_ID;
-n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
+n_ID = std::max({n_Decoder, perfModel->EX});
 perfModel->ID = n_ID;
 // EXPass
 uint64_t n_EXPass;
@@ -2861,20 +2999,24 @@ n_MEMPass = n_EX + 1;
 uint64_t n_MEM;
 n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
+// CSR
+uint64_t n_CSR;
+n_CSR = n_MEM + 1;
+perfModel->regModel.setXd(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
-perfModel->regModel.setXd(n_Reg);
 // WB
-uint64_t n_WB = n_Reg;
+uint64_t n_WB;
+n_WB = std::max({n_CSR, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_csrrwi = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_csrrsi = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "csrrwi",
+  "csrrsi",
   44,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -2892,13 +3034,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2921,19 +3066,24 @@ n_MEMPass = n_EX + 1;
 uint64_t n_MEM;
 n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
+// CSR
+uint64_t n_CSR;
+n_CSR = n_MEM + 1;
+perfModel->regModel.setXd(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Reg;
+uint64_t n_WB;
+n_WB = std::max({n_CSR, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_csrrsi = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_csrrci = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "csrrsi",
+  "csrrci",
   45,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -2951,13 +3101,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -2980,19 +3133,24 @@ n_MEMPass = n_EX + 1;
 uint64_t n_MEM;
 n_MEM = std::max({n_MEMPass, perfModel->WB});
 perfModel->MEM = n_MEM;
+// CSR
+uint64_t n_CSR;
+n_CSR = n_MEM + 1;
+perfModel->regModel.setXd(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Reg;
+uint64_t n_WB;
+n_WB = std::max({n_CSR, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_csrrci = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_sb = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "csrrci",
+  "sb",
   46,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3010,48 +3168,66 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
+// uA_OF_A
+uint64_t n_uA_OF_A;
+n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+// uA_OF_B
+uint64_t n_uA_OF_B;
+n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 // ID
 uint64_t n_ID;
-n_ID = std::max({n_Decoder, perfModel->EX});
+n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
-// EXPass
-uint64_t n_EXPass;
-n_EXPass = n_ID + 1;
+// ALU
+uint64_t n_ALU;
+n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_EXPass, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
-// MEMPass
-uint64_t n_MEMPass;
-n_MEMPass = n_EX + 1;
+// DCache
+uint64_t n_DCache;
+n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+// StoreCommit
+uint64_t n_StoreCommit;
+n_StoreCommit = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_MEMPass, perfModel->WB});
+n_MEM = std::max({n_DCache, n_StoreCommit, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Reg
-uint64_t n_Reg;
-n_Reg = n_MEM + 1;
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Reg;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_sb = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_sh = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sb",
+  "sh",
   47,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3069,13 +3245,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3093,30 +3272,39 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
 n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+// StoreCommit
+uint64_t n_StoreCommit;
+n_StoreCommit = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_DCache, perfModel->WB});
+n_MEM = std::max({n_DCache, n_StoreCommit, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_sh = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_sw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sh",
+  "sw",
   48,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3134,13 +3322,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3158,30 +3349,39 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
 n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+// StoreCommit
+uint64_t n_StoreCommit;
+n_StoreCommit = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_DCache, perfModel->WB});
+n_MEM = std::max({n_DCache, n_StoreCommit, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_sw = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_sd = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sw",
+  "sd",
   49,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3199,13 +3399,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3223,30 +3426,39 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
 n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+// StoreCommit
+uint64_t n_StoreCommit;
+n_StoreCommit = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_DCache, perfModel->WB});
+n_MEM = std::max({n_DCache, n_StoreCommit, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_sd = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_lb = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "sd",
+  "lb",
   50,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3264,13 +3476,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3278,19 +3493,22 @@ n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
 n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
-// uA_OF_B
-uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 // ID
 uint64_t n_ID;
-n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
+n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
 perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
@@ -3299,19 +3517,24 @@ n_DCache = n_EX + perfModel->dCacheModel.getDelay();
 uint64_t n_MEM;
 n_MEM = std::max({n_DCache, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// LoadWB
+uint64_t n_LoadWB;
+n_LoadWB = n_MEM + 1;
+perfModel->regModel.setXd(n_LoadWB);
+// Reg
+uint64_t n_Reg;
+n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB;
+n_WB = std::max({n_LoadWB, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_lb = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_lbu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "lb",
+  "lbu",
   51,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3329,13 +3552,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3350,9 +3576,15 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
@@ -3365,16 +3597,20 @@ perfModel->MEM = n_MEM;
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
 perfModel->regModel.setXd(n_LoadWB);
+// Reg
+uint64_t n_Reg;
+n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_LoadWB;
+uint64_t n_WB;
+n_WB = std::max({n_LoadWB, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_lbu = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_lh = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "lbu",
+  "lh",
   52,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3392,13 +3628,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3413,9 +3652,15 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
@@ -3428,16 +3673,20 @@ perfModel->MEM = n_MEM;
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
 perfModel->regModel.setXd(n_LoadWB);
+// Reg
+uint64_t n_Reg;
+n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_LoadWB;
+uint64_t n_WB;
+n_WB = std::max({n_LoadWB, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_lh = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_lhu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "lh",
+  "lhu",
   53,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3455,13 +3704,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3476,9 +3728,15 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
@@ -3491,16 +3749,20 @@ perfModel->MEM = n_MEM;
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
 perfModel->regModel.setXd(n_LoadWB);
+// Reg
+uint64_t n_Reg;
+n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_LoadWB;
+uint64_t n_WB;
+n_WB = std::max({n_LoadWB, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_lhu = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_lw = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "lhu",
+  "lw",
   54,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3518,13 +3780,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3539,9 +3804,15 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
@@ -3554,16 +3825,20 @@ perfModel->MEM = n_MEM;
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
 perfModel->regModel.setXd(n_LoadWB);
+// Reg
+uint64_t n_Reg;
+n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_LoadWB;
+uint64_t n_WB;
+n_WB = std::max({n_LoadWB, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_lw = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_ld = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "lw",
+  "ld",
   55,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3581,13 +3856,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3602,9 +3880,15 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
@@ -3617,16 +3901,20 @@ perfModel->MEM = n_MEM;
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
 perfModel->regModel.setXd(n_LoadWB);
+// Reg
+uint64_t n_Reg;
+n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_LoadWB;
+uint64_t n_WB;
+n_WB = std::max({n_LoadWB, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_ld = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_lwu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "ld",
+  "lwu",
   56,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3644,13 +3932,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3665,9 +3956,15 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+// DTLB
+uint64_t n_DTLB;
+n_DTLB = n_ID + 1;
+// LSUReq
+uint64_t n_LSUReq;
+n_LSUReq = n_ID + 1;
 // EX
 uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
+n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
@@ -3680,16 +3977,20 @@ perfModel->MEM = n_MEM;
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
 perfModel->regModel.setXd(n_LoadWB);
+// Reg
+uint64_t n_Reg;
+n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_LoadWB;
+uint64_t n_WB;
+n_WB = std::max({n_LoadWB, n_Reg});
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_lwu = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_beq = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "lwu",
+  "beq",
   57,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3707,13 +4008,20 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
+// BPU
+uint64_t n_BPU;
+n_BPU = n_Enter + 1;
+perfModel->dynBranchPredModel.setPc_p(n_BPU);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3721,9 +4029,12 @@ n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
 n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+// uA_OF_B
+uint64_t n_uA_OF_B;
+n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 // ID
 uint64_t n_ID;
-n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
+n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
@@ -3732,27 +4043,30 @@ n_ALU = n_ID + 1;
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
 perfModel->EX = n_EX;
-// DCache
-uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+// Branch
+uint64_t n_Branch;
+n_Branch = n_EX + 1;
+perfModel->dynBranchPredModel.setPc_c(n_Branch);
+// FlushMem
+uint64_t n_FlushMem;
+n_FlushMem = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_DCache, perfModel->WB});
+n_MEM = std::max({n_Branch, n_FlushMem, perfModel->WB});
 perfModel->MEM = n_MEM;
-// LoadWB
-uint64_t n_LoadWB;
-n_LoadWB = n_MEM + 1;
-perfModel->regModel.setXd(n_LoadWB);
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_LoadWB;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_beq = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_bne = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "beq",
+  "bne",
   58,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3770,6 +4084,9 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
@@ -3780,7 +4097,7 @@ n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, n_BPU, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3806,23 +4123,26 @@ perfModel->EX = n_EX;
 uint64_t n_Branch;
 n_Branch = n_EX + 1;
 perfModel->dynBranchPredModel.setPc_c(n_Branch);
+// FlushMem
+uint64_t n_FlushMem;
+n_FlushMem = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_Branch, perfModel->WB});
+n_MEM = std::max({n_Branch, n_FlushMem, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_bne = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_blt = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "bne",
+  "blt",
   59,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3840,6 +4160,9 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
@@ -3850,7 +4173,7 @@ n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, n_BPU, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3876,23 +4199,26 @@ perfModel->EX = n_EX;
 uint64_t n_Branch;
 n_Branch = n_EX + 1;
 perfModel->dynBranchPredModel.setPc_c(n_Branch);
+// FlushMem
+uint64_t n_FlushMem;
+n_FlushMem = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_Branch, perfModel->WB});
+n_MEM = std::max({n_Branch, n_FlushMem, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_blt = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_bge = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "blt",
+  "bge",
   60,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3910,6 +4236,9 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
@@ -3920,7 +4249,7 @@ n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, n_BPU, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -3946,23 +4275,26 @@ perfModel->EX = n_EX;
 uint64_t n_Branch;
 n_Branch = n_EX + 1;
 perfModel->dynBranchPredModel.setPc_c(n_Branch);
+// FlushMem
+uint64_t n_FlushMem;
+n_FlushMem = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_Branch, perfModel->WB});
+n_MEM = std::max({n_Branch, n_FlushMem, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_bge = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_bltu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "bge",
+  "bltu",
   61,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -3980,6 +4312,9 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
@@ -3990,7 +4325,7 @@ n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, n_BPU, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -4016,23 +4351,26 @@ perfModel->EX = n_EX;
 uint64_t n_Branch;
 n_Branch = n_EX + 1;
 perfModel->dynBranchPredModel.setPc_c(n_Branch);
+// FlushMem
+uint64_t n_FlushMem;
+n_FlushMem = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_Branch, perfModel->WB});
+n_MEM = std::max({n_Branch, n_FlushMem, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_bltu = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_bgeu = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "bltu",
+  "bgeu",
   62,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -4050,6 +4388,9 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
@@ -4060,7 +4401,7 @@ n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, n_BPU, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
@@ -4086,23 +4427,26 @@ perfModel->EX = n_EX;
 uint64_t n_Branch;
 n_Branch = n_EX + 1;
 perfModel->dynBranchPredModel.setPc_c(n_Branch);
+// FlushMem
+uint64_t n_FlushMem;
+n_FlushMem = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_Branch, perfModel->WB});
+n_MEM = std::max({n_Branch, n_FlushMem, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// WBPass
+uint64_t n_WBPass;
+n_WBPass = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB = n_WBPass;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_bgeu = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_jal = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "bgeu",
+  "jal",
   63,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -4120,6 +4464,9 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
@@ -4127,27 +4474,22 @@ perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
-perfModel->dynBranchPredModel.setPc_p(n_BPU);
+perfModel->dynBranchPredModel.setPc_p_j(n_BPU);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, n_BPU, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
-// uA_OF_A
-uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
-// uA_OF_B
-uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
 // ID
 uint64_t n_ID;
-n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
+n_ID = std::max({n_Decoder, perfModel->EX});
 perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+perfModel->regModel.setXd(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -4156,23 +4498,26 @@ perfModel->EX = n_EX;
 uint64_t n_Branch;
 n_Branch = n_EX + 1;
 perfModel->dynBranchPredModel.setPc_c(n_Branch);
+// FlushMem
+uint64_t n_FlushMem;
+n_FlushMem = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_Branch, perfModel->WB});
+n_MEM = std::max({n_Branch, n_FlushMem, perfModel->WB});
 perfModel->MEM = n_MEM;
-// Retire
-uint64_t n_Retire;
-n_Retire = n_MEM + 1;
+// Reg
+uint64_t n_Reg;
+n_Reg = n_MEM + 1;
 // WB
-uint64_t n_WB = n_Retire;
+uint64_t n_WB = n_Reg;
 perfModel->WB = n_WB;
 
   }
 );
 
-static SchedulingFunction *schedulingFunction_jal = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction_jalr = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "jal",
+  "jalr",
   64,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -4190,6 +4535,9 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
@@ -4197,21 +4545,25 @@ perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
-perfModel->dynBranchPredModel.setPc_p_j(n_BPU);
+perfModel->dynBranchPredModel.setPc_p_jr(n_BPU);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, n_BPU, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
+// uA_OF_A
+uint64_t n_uA_OF_A;
+n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
 // ID
 uint64_t n_ID;
-n_ID = std::max({n_Decoder, perfModel->EX});
+n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
 perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
+perfModel->regModel.setXd(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -4220,14 +4572,16 @@ perfModel->EX = n_EX;
 uint64_t n_Branch;
 n_Branch = n_EX + 1;
 perfModel->dynBranchPredModel.setPc_c(n_Branch);
+// FlushMem
+uint64_t n_FlushMem;
+n_FlushMem = n_EX + 1;
 // MEM
 uint64_t n_MEM;
-n_MEM = std::max({n_Branch, perfModel->WB});
+n_MEM = std::max({n_Branch, n_FlushMem, perfModel->WB});
 perfModel->MEM = n_MEM;
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
-perfModel->regModel.setXd(n_Reg);
 // WB
 uint64_t n_WB = n_Reg;
 perfModel->WB = n_WB;
@@ -4235,9 +4589,9 @@ perfModel->WB = n_WB;
   }
 );
 
-static SchedulingFunction *schedulingFunction_jalr = new SchedulingFunction(
+static SchedulingFunction *schedulingFunction__def = new SchedulingFunction(
   ROCKET_SchedulingFunctionSet,
-  "jalr",
+  "_def",
   65,
   [](PerformanceModel* perfModel_){
   ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
@@ -4255,81 +4609,16 @@ n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
 // uA_PcPredict
 uint64_t n_uA_PcPredict;
 n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
-// ICache
-uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
-perfModel->iCacheModel.setIc_in(n_ICache);
-// BPU
-uint64_t n_BPU;
-n_BPU = n_Enter + 1;
-perfModel->dynBranchPredModel.setPc_p_jr(n_BPU);
-// IF
-uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, n_BPU, perfModel->ID});
-perfModel->IF = n_IF;
-// Decoder
-uint64_t n_Decoder;
-n_Decoder = n_IF + 1;
-// uA_OF_A
-uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
-// ID
-uint64_t n_ID;
-n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
-perfModel->ID = n_ID;
-// ALU
-uint64_t n_ALU;
-n_ALU = n_ID + 1;
-// EX
-uint64_t n_EX;
-n_EX = std::max({n_ALU, perfModel->MEM});
-perfModel->EX = n_EX;
-// Branch
-uint64_t n_Branch;
-n_Branch = n_EX + 1;
-perfModel->dynBranchPredModel.setPc_c(n_Branch);
-// MEM
-uint64_t n_MEM;
-n_MEM = std::max({n_Branch, perfModel->WB});
-perfModel->MEM = n_MEM;
-// Reg
-uint64_t n_Reg;
-n_Reg = n_MEM + 1;
-perfModel->regModel.setXd(n_Reg);
-// WB
-uint64_t n_WB = n_Reg;
-perfModel->WB = n_WB;
-
-  }
-);
-
-static SchedulingFunction *schedulingFunction__def = new SchedulingFunction(
-  ROCKET_SchedulingFunctionSet,
-  "_def",
-  66,
-  [](PerformanceModel* perfModel_){
-  ROCKET_PerformanceModel* perfModel = static_cast<ROCKET_PerformanceModel*>(perfModel_);
-  // Enter
-uint64_t n_Enter = perfModel->IF;
-// PC_Gen
-uint64_t n_PC_Gen;
-n_PC_Gen = n_Enter + 1;
-// uA_PcCorrect
-uint64_t n_uA_PcCorrect;
-n_uA_PcCorrect = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_mp()});
-// uA_CacheBlock
-uint64_t n_uA_CacheBlock;
-n_uA_CacheBlock = std::max({n_Enter, perfModel->iCacheModel.getIc_out()});
-// uA_PcPredict
-uint64_t n_uA_PcPredict;
-n_uA_PcPredict = std::max({n_Enter, perfModel->dynBranchPredModel.getPc_pt()});
+// ITLB
+uint64_t n_ITLB;
+n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
 n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
-n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ICache, perfModel->ID});
+n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, perfModel->ID});
 perfModel->IF = n_IF;
 // Decoder
 uint64_t n_Decoder;

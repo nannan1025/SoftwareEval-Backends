@@ -27,8 +27,7 @@ namespace rocket{
 
 struct BranchHistoryEntry
 {
-  // 2-bit saturating counter. This model only predicts taken at strongly taken
-  // to reduce false taken predictions in branch-heavy traces.
+  // 2-bit saturating counter: 0/1 predict not-taken, 2/3 predict taken.
   uint8_t counter = 1;
 };
 

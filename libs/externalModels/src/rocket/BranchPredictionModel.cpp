@@ -45,7 +45,7 @@ void BranchHistoryTable::advanceHistory(bool taken_)
 bool BranchHistoryTable::getPrediction(uint64_t pc_, uint64_t imm_)
 {
   (void)imm_;
-  return tab[getIndex(pc_)].counter == 3;
+  return tab[getIndex(pc_)].counter >= 2;
 }
 
 void BranchHistoryTable::update(uint64_t pc_, bool taken_)

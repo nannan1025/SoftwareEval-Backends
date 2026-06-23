@@ -66,29 +66,10 @@ static InstructionPrinter *instrPrinter_sub = new InstructionPrinter(
     return ret_strs.str();
   }
 );
-static InstructionPrinter *instrPrinter_sra = new InstructionPrinter(
-  ROCKET_InstrPrinterSet,
-  "sra",
-  2,
-  [](Printer* printer_){
-    std::stringstream ret_strs;
-    ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
-    ret_strs << "0x" << std::setfill('0') << std::setw(16) << std::right << std::hex << printer->get_pc() << " | ";
-    ret_strs << std::setfill('-') << std::setw(18) << "" << " | ";
-    ret_strs << "0x" << std::setfill('0') << std::setw(16) << std::right << std::hex << printer->get_rs1() << " | ";
-    ret_strs << "0x" << std::setfill('0') << std::setw(16) << std::right << std::hex << printer->get_rd() << " | ";
-    ret_strs << std::setfill('-') << std::setw(18) << "" << " | ";
-    ret_strs << "0x" << std::setfill('0') << std::setw(16) << std::right << std::hex << printer->get_rs2() << " | ";
-    ret_strs << std::setfill('-') << std::setw(18) << "" << " | ";
-    ret_strs << std::setfill('-') << std::setw(18) << "" << " | ";
-    ret_strs << std::setfill('-') << std::setw(18) << "" << " | ";
-    return ret_strs.str();
-  }
-);
 static InstructionPrinter *instrPrinter_xor = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "xor",
-  3,
+  2,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -107,7 +88,7 @@ static InstructionPrinter *instrPrinter_xor = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_or = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "or",
-  4,
+  3,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -126,7 +107,7 @@ static InstructionPrinter *instrPrinter_or = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_and = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "and",
-  5,
+  4,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -145,7 +126,7 @@ static InstructionPrinter *instrPrinter_and = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_slt = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "slt",
-  6,
+  5,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -164,7 +145,7 @@ static InstructionPrinter *instrPrinter_slt = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_sltu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "sltu",
-  7,
+  6,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -183,7 +164,7 @@ static InstructionPrinter *instrPrinter_sltu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_sll = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "sll",
-  8,
+  7,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -202,7 +183,7 @@ static InstructionPrinter *instrPrinter_sll = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_srl = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "srl",
-  9,
+  8,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -218,10 +199,10 @@ static InstructionPrinter *instrPrinter_srl = new InstructionPrinter(
     return ret_strs.str();
   }
 );
-static InstructionPrinter *instrPrinter_sraw = new InstructionPrinter(
+static InstructionPrinter *instrPrinter_sra = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
-  "sraw",
-  10,
+  "sra",
+  9,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -240,7 +221,7 @@ static InstructionPrinter *instrPrinter_sraw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_addw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "addw",
-  11,
+  10,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -259,7 +240,7 @@ static InstructionPrinter *instrPrinter_addw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_subw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "subw",
-  12,
+  11,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -278,7 +259,7 @@ static InstructionPrinter *instrPrinter_subw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_addi = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "addi",
-  13,
+  12,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -297,7 +278,7 @@ static InstructionPrinter *instrPrinter_addi = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_xori = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "xori",
-  14,
+  13,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -316,7 +297,7 @@ static InstructionPrinter *instrPrinter_xori = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_ori = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "ori",
-  15,
+  14,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -335,7 +316,7 @@ static InstructionPrinter *instrPrinter_ori = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_andi = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "andi",
-  16,
+  15,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -354,7 +335,7 @@ static InstructionPrinter *instrPrinter_andi = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_slti = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "slti",
-  17,
+  16,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -373,7 +354,7 @@ static InstructionPrinter *instrPrinter_slti = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_sltiu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "sltiu",
-  18,
+  17,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -392,7 +373,7 @@ static InstructionPrinter *instrPrinter_sltiu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_slli = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "slli",
-  19,
+  18,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -411,7 +392,7 @@ static InstructionPrinter *instrPrinter_slli = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_srli = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "srli",
-  20,
+  19,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -430,7 +411,7 @@ static InstructionPrinter *instrPrinter_srli = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_srai = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "srai",
-  21,
+  20,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -449,7 +430,7 @@ static InstructionPrinter *instrPrinter_srai = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_addiw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "addiw",
-  22,
+  21,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -468,7 +449,7 @@ static InstructionPrinter *instrPrinter_addiw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_slliw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "slliw",
-  23,
+  22,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -487,7 +468,7 @@ static InstructionPrinter *instrPrinter_slliw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_sraiw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "sraiw",
-  24,
+  23,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -506,7 +487,7 @@ static InstructionPrinter *instrPrinter_sraiw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_srliw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "srliw",
-  25,
+  24,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -525,7 +506,7 @@ static InstructionPrinter *instrPrinter_srliw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_auipc = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "auipc",
-  26,
+  25,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -544,7 +525,7 @@ static InstructionPrinter *instrPrinter_auipc = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_lui = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "lui",
-  27,
+  26,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -563,7 +544,7 @@ static InstructionPrinter *instrPrinter_lui = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_mul = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "mul",
-  28,
+  27,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -582,7 +563,7 @@ static InstructionPrinter *instrPrinter_mul = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_mulw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "mulw",
-  29,
+  28,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -601,7 +582,7 @@ static InstructionPrinter *instrPrinter_mulw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_mulh = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "mulh",
-  30,
+  29,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -620,7 +601,7 @@ static InstructionPrinter *instrPrinter_mulh = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_mulhu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "mulhu",
-  31,
+  30,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -639,7 +620,7 @@ static InstructionPrinter *instrPrinter_mulhu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_mulhsu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "mulhsu",
-  32,
+  31,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -658,7 +639,7 @@ static InstructionPrinter *instrPrinter_mulhsu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_div = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "div",
-  33,
+  32,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -677,7 +658,7 @@ static InstructionPrinter *instrPrinter_div = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_rem = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "rem",
-  34,
+  33,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -696,7 +677,7 @@ static InstructionPrinter *instrPrinter_rem = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_divw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "divw",
-  35,
+  34,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -715,7 +696,7 @@ static InstructionPrinter *instrPrinter_divw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_remw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "remw",
-  36,
+  35,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -734,7 +715,7 @@ static InstructionPrinter *instrPrinter_remw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_divu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "divu",
-  37,
+  36,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -753,7 +734,7 @@ static InstructionPrinter *instrPrinter_divu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_remu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "remu",
-  38,
+  37,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -772,7 +753,7 @@ static InstructionPrinter *instrPrinter_remu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_divuw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "divuw",
-  39,
+  38,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -791,7 +772,7 @@ static InstructionPrinter *instrPrinter_divuw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_remuw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "remuw",
-  40,
+  39,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -810,7 +791,7 @@ static InstructionPrinter *instrPrinter_remuw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_csrrw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "csrrw",
-  41,
+  40,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -829,7 +810,7 @@ static InstructionPrinter *instrPrinter_csrrw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_csrrs = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "csrrs",
-  42,
+  41,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -848,7 +829,7 @@ static InstructionPrinter *instrPrinter_csrrs = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_csrrc = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "csrrc",
-  43,
+  42,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -867,7 +848,7 @@ static InstructionPrinter *instrPrinter_csrrc = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_csrrwi = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "csrrwi",
-  44,
+  43,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -886,7 +867,7 @@ static InstructionPrinter *instrPrinter_csrrwi = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_csrrsi = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "csrrsi",
-  45,
+  44,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -905,7 +886,7 @@ static InstructionPrinter *instrPrinter_csrrsi = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_csrrci = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "csrrci",
-  46,
+  45,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -924,7 +905,7 @@ static InstructionPrinter *instrPrinter_csrrci = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_sb = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "sb",
-  47,
+  46,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -943,7 +924,7 @@ static InstructionPrinter *instrPrinter_sb = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_sh = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "sh",
-  48,
+  47,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -962,7 +943,7 @@ static InstructionPrinter *instrPrinter_sh = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_sw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "sw",
-  49,
+  48,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -981,7 +962,7 @@ static InstructionPrinter *instrPrinter_sw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_sd = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "sd",
-  50,
+  49,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1000,7 +981,7 @@ static InstructionPrinter *instrPrinter_sd = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_lb = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "lb",
-  51,
+  50,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1019,7 +1000,7 @@ static InstructionPrinter *instrPrinter_lb = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_lbu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "lbu",
-  52,
+  51,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1038,7 +1019,7 @@ static InstructionPrinter *instrPrinter_lbu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_lh = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "lh",
-  53,
+  52,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1057,7 +1038,7 @@ static InstructionPrinter *instrPrinter_lh = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_lhu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "lhu",
-  54,
+  53,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1076,7 +1057,7 @@ static InstructionPrinter *instrPrinter_lhu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_lw = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "lw",
-  55,
+  54,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1095,7 +1076,7 @@ static InstructionPrinter *instrPrinter_lw = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_ld = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "ld",
-  56,
+  55,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1114,7 +1095,7 @@ static InstructionPrinter *instrPrinter_ld = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_lwu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "lwu",
-  57,
+  56,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1133,7 +1114,7 @@ static InstructionPrinter *instrPrinter_lwu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_beq = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "beq",
-  58,
+  57,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1152,7 +1133,7 @@ static InstructionPrinter *instrPrinter_beq = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_bne = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "bne",
-  59,
+  58,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1171,7 +1152,7 @@ static InstructionPrinter *instrPrinter_bne = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_blt = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "blt",
-  60,
+  59,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1190,7 +1171,7 @@ static InstructionPrinter *instrPrinter_blt = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_bge = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "bge",
-  61,
+  60,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1209,7 +1190,7 @@ static InstructionPrinter *instrPrinter_bge = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_bltu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "bltu",
-  62,
+  61,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1228,7 +1209,7 @@ static InstructionPrinter *instrPrinter_bltu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_bgeu = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "bgeu",
-  63,
+  62,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1247,7 +1228,7 @@ static InstructionPrinter *instrPrinter_bgeu = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_jal = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "jal",
-  64,
+  63,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1266,7 +1247,7 @@ static InstructionPrinter *instrPrinter_jal = new InstructionPrinter(
 static InstructionPrinter *instrPrinter_jalr = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "jalr",
-  65,
+  64,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
@@ -1285,7 +1266,7 @@ static InstructionPrinter *instrPrinter_jalr = new InstructionPrinter(
 static InstructionPrinter *instrPrinter__def = new InstructionPrinter(
   ROCKET_InstrPrinterSet,
   "_def",
-  66,
+  65,
   [](Printer* printer_){
     std::stringstream ret_strs;
     ROCKET_Printer* printer = static_cast<ROCKET_Printer*>(printer_);
