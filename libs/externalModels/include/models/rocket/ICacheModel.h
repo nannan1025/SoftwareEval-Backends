@@ -43,6 +43,7 @@ public:
   uint64_t getIc_out(void) { return t_ic; };
 
   std::string getInfo_miss(void) { return std::to_string(isMiss); };
+  bool getMiss(void) const { return isMiss; };
   
   // Trace value
   uint64_t* pc_ptr;

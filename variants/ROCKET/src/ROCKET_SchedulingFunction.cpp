@@ -53,7 +53,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -64,10 +67,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -75,7 +78,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -122,7 +125,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -133,10 +139,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -144,7 +150,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -191,7 +197,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -202,10 +211,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -213,7 +222,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -260,7 +269,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -271,10 +283,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -282,7 +294,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -329,7 +341,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -340,10 +355,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -351,7 +366,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -398,7 +413,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -409,10 +427,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -420,7 +438,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -467,7 +485,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -478,10 +499,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -489,7 +510,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -536,7 +557,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -547,10 +571,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -558,7 +582,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -605,7 +629,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -616,10 +643,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -627,7 +654,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -674,7 +701,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -685,10 +715,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -696,7 +726,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -743,7 +773,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -754,10 +787,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -765,7 +798,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -812,7 +845,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -823,10 +859,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -834,7 +870,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -881,7 +917,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -892,7 +931,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -900,7 +939,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -947,7 +986,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -958,7 +1000,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -966,7 +1008,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1013,7 +1055,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1024,7 +1069,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1032,7 +1077,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1079,7 +1124,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1090,7 +1138,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1098,7 +1146,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1145,7 +1193,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1156,7 +1207,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1164,7 +1215,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1211,7 +1262,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1222,7 +1276,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1230,7 +1284,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1277,7 +1331,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1288,7 +1345,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1296,7 +1353,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1343,7 +1400,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1354,7 +1414,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1362,7 +1422,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1409,7 +1469,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1420,7 +1483,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1428,7 +1491,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1475,7 +1538,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1486,7 +1552,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1494,7 +1560,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1541,7 +1607,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1552,7 +1621,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1560,7 +1629,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1607,7 +1676,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1618,7 +1690,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1626,7 +1698,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1673,7 +1745,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1684,7 +1759,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -1692,7 +1767,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1739,7 +1814,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1755,7 +1833,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1802,7 +1880,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1818,7 +1899,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -1865,7 +1946,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1876,10 +1960,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -1887,7 +1971,7 @@ perfModel->ID = n_ID;
 // MUL
 uint64_t n_MUL;
 n_MUL = n_ID + 1;
-perfModel->regModel.setXd(n_MUL);
+perfModel->setRegWriteReady(n_MUL);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_MUL, perfModel->MEM});
@@ -1934,7 +2018,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -1945,10 +2032,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -1956,7 +2043,7 @@ perfModel->ID = n_ID;
 // MUL
 uint64_t n_MUL;
 n_MUL = n_ID + 1;
-perfModel->regModel.setXd(n_MUL);
+perfModel->setRegWriteReady(n_MUL);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_MUL, perfModel->MEM});
@@ -2003,7 +2090,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2014,10 +2104,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -2025,7 +2115,7 @@ perfModel->ID = n_ID;
 // MUL
 uint64_t n_MUL;
 n_MUL = n_ID + 1;
-perfModel->regModel.setXd(n_MUL);
+perfModel->setRegWriteReady(n_MUL);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_MUL, perfModel->MEM});
@@ -2072,7 +2162,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2083,10 +2176,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -2094,7 +2187,7 @@ perfModel->ID = n_ID;
 // MUL
 uint64_t n_MUL;
 n_MUL = n_ID + 1;
-perfModel->regModel.setXd(n_MUL);
+perfModel->setRegWriteReady(n_MUL);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_MUL, perfModel->MEM});
@@ -2141,7 +2234,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2152,10 +2248,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -2163,7 +2259,7 @@ perfModel->ID = n_ID;
 // MUL
 uint64_t n_MUL;
 n_MUL = n_ID + 1;
-perfModel->regModel.setXd(n_MUL);
+perfModel->setRegWriteReady(n_MUL);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_MUL, perfModel->MEM});
@@ -2210,7 +2306,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2221,18 +2320,21 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_ID + perfModel->divider.getDelay();
-perfModel->regModel.setXd(n_DIV);
+uint64_t n_DIVDelay;
+n_DIVDelay = perfModel->divider.getDelay();
+n_DIV = n_ID + n_DIVDelay;
+perfModel->setDividerDelay(n_DIVDelay > 0 ? n_DIVDelay - 1 : 0);
+perfModel->setRegWriteReady(n_DIV);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_DIV, perfModel->MEM});
@@ -2279,7 +2381,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2290,18 +2395,21 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_ID + perfModel->divider.getDelay();
-perfModel->regModel.setXd(n_DIV);
+uint64_t n_DIVDelay;
+n_DIVDelay = perfModel->divider.getDelay();
+n_DIV = n_ID + n_DIVDelay;
+perfModel->setDividerDelay(n_DIVDelay > 0 ? n_DIVDelay - 1 : 0);
+perfModel->setRegWriteReady(n_DIV);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_DIV, perfModel->MEM});
@@ -2348,7 +2456,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2359,18 +2470,21 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_ID + perfModel->divider.getDelay();
-perfModel->regModel.setXd(n_DIV);
+uint64_t n_DIVDelay;
+n_DIVDelay = perfModel->divider.getDelay();
+n_DIV = n_ID + n_DIVDelay;
+perfModel->setDividerDelay(n_DIVDelay > 0 ? n_DIVDelay - 1 : 0);
+perfModel->setRegWriteReady(n_DIV);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_DIV, perfModel->MEM});
@@ -2417,7 +2531,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2428,18 +2545,21 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // DIV
 uint64_t n_DIV;
-n_DIV = n_ID + perfModel->divider.getDelay();
-perfModel->regModel.setXd(n_DIV);
+uint64_t n_DIVDelay;
+n_DIVDelay = perfModel->divider.getDelay();
+n_DIV = n_ID + n_DIVDelay;
+perfModel->setDividerDelay(n_DIVDelay > 0 ? n_DIVDelay - 1 : 0);
+perfModel->setRegWriteReady(n_DIV);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_DIV, perfModel->MEM});
@@ -2486,7 +2606,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2497,18 +2620,21 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_ID + perfModel->divider_u.getDelay();
-perfModel->regModel.setXd(n_DIVU);
+uint64_t n_DIVUDelay;
+n_DIVUDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_ID + n_DIVUDelay;
+perfModel->setDividerDelay(n_DIVUDelay > 0 ? n_DIVUDelay - 1 : 0);
+perfModel->setRegWriteReady(n_DIVU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_DIVU, perfModel->MEM});
@@ -2555,7 +2681,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2566,18 +2695,21 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_ID + perfModel->divider_u.getDelay();
-perfModel->regModel.setXd(n_DIVU);
+uint64_t n_DIVUDelay;
+n_DIVUDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_ID + n_DIVUDelay;
+perfModel->setDividerDelay(n_DIVUDelay > 0 ? n_DIVUDelay - 1 : 0);
+perfModel->setRegWriteReady(n_DIVU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_DIVU, perfModel->MEM});
@@ -2624,7 +2756,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2635,18 +2770,21 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_ID + perfModel->divider_u.getDelay();
-perfModel->regModel.setXd(n_DIVU);
+uint64_t n_DIVUDelay;
+n_DIVUDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_ID + n_DIVUDelay;
+perfModel->setDividerDelay(n_DIVUDelay > 0 ? n_DIVUDelay - 1 : 0);
+perfModel->setRegWriteReady(n_DIVU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_DIVU, perfModel->MEM});
@@ -2693,7 +2831,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2704,18 +2845,21 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
 perfModel->ID = n_ID;
 // DIVU
 uint64_t n_DIVU;
-n_DIVU = n_ID + perfModel->divider_u.getDelay();
-perfModel->regModel.setXd(n_DIVU);
+uint64_t n_DIVUDelay;
+n_DIVUDelay = perfModel->divider_u.getDelay();
+n_DIVU = n_ID + n_DIVUDelay;
+perfModel->setDividerDelay(n_DIVUDelay > 0 ? n_DIVUDelay - 1 : 0);
+perfModel->setRegWriteReady(n_DIVU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_DIVU, perfModel->MEM});
@@ -2762,7 +2906,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2773,7 +2920,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -2795,7 +2942,7 @@ perfModel->MEM = n_MEM;
 // CSR
 uint64_t n_CSR;
 n_CSR = n_MEM + 1;
-perfModel->regModel.setXd(n_CSR);
+perfModel->setRegWriteReady(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -2832,7 +2979,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2843,7 +2993,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -2865,7 +3015,7 @@ perfModel->MEM = n_MEM;
 // CSR
 uint64_t n_CSR;
 n_CSR = n_MEM + 1;
-perfModel->regModel.setXd(n_CSR);
+perfModel->setRegWriteReady(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -2902,7 +3052,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -2913,7 +3066,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -2935,7 +3088,7 @@ perfModel->MEM = n_MEM;
 // CSR
 uint64_t n_CSR;
 n_CSR = n_MEM + 1;
-perfModel->regModel.setXd(n_CSR);
+perfModel->setRegWriteReady(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -2972,7 +3125,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3002,7 +3158,7 @@ perfModel->MEM = n_MEM;
 // CSR
 uint64_t n_CSR;
 n_CSR = n_MEM + 1;
-perfModel->regModel.setXd(n_CSR);
+perfModel->setRegWriteReady(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -3039,7 +3195,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3069,7 +3228,7 @@ perfModel->MEM = n_MEM;
 // CSR
 uint64_t n_CSR;
 n_CSR = n_MEM + 1;
-perfModel->regModel.setXd(n_CSR);
+perfModel->setRegWriteReady(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -3106,7 +3265,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3136,7 +3298,7 @@ perfModel->MEM = n_MEM;
 // CSR
 uint64_t n_CSR;
 n_CSR = n_MEM + 1;
-perfModel->regModel.setXd(n_CSR);
+perfModel->setRegWriteReady(n_CSR);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -3173,7 +3335,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3184,10 +3349,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -3207,7 +3372,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // StoreCommit
 uint64_t n_StoreCommit;
 n_StoreCommit = n_EX + 1;
@@ -3250,7 +3418,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3261,10 +3432,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -3284,7 +3455,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // StoreCommit
 uint64_t n_StoreCommit;
 n_StoreCommit = n_EX + 1;
@@ -3327,7 +3501,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3338,10 +3515,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -3361,7 +3538,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // StoreCommit
 uint64_t n_StoreCommit;
 n_StoreCommit = n_EX + 1;
@@ -3404,7 +3584,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3415,10 +3598,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -3438,7 +3621,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // StoreCommit
 uint64_t n_StoreCommit;
 n_StoreCommit = n_EX + 1;
@@ -3481,7 +3667,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3492,7 +3681,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -3512,7 +3701,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // MEM
 uint64_t n_MEM;
 n_MEM = std::max({n_DCache, perfModel->WB});
@@ -3520,7 +3712,7 @@ perfModel->MEM = n_MEM;
 // LoadWB
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
-perfModel->regModel.setXd(n_LoadWB);
+perfModel->setRegWriteReady(n_LoadWB);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -3557,7 +3749,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3568,7 +3763,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -3588,7 +3783,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // MEM
 uint64_t n_MEM;
 n_MEM = std::max({n_DCache, perfModel->WB});
@@ -3596,7 +3794,7 @@ perfModel->MEM = n_MEM;
 // LoadWB
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
-perfModel->regModel.setXd(n_LoadWB);
+perfModel->setRegWriteReady(n_LoadWB);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -3633,7 +3831,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3644,7 +3845,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -3664,7 +3865,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // MEM
 uint64_t n_MEM;
 n_MEM = std::max({n_DCache, perfModel->WB});
@@ -3672,7 +3876,7 @@ perfModel->MEM = n_MEM;
 // LoadWB
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
-perfModel->regModel.setXd(n_LoadWB);
+perfModel->setRegWriteReady(n_LoadWB);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -3709,7 +3913,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3720,7 +3927,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -3740,7 +3947,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // MEM
 uint64_t n_MEM;
 n_MEM = std::max({n_DCache, perfModel->WB});
@@ -3748,7 +3958,7 @@ perfModel->MEM = n_MEM;
 // LoadWB
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
-perfModel->regModel.setXd(n_LoadWB);
+perfModel->setRegWriteReady(n_LoadWB);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -3785,7 +3995,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3796,7 +4009,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -3816,7 +4029,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // MEM
 uint64_t n_MEM;
 n_MEM = std::max({n_DCache, perfModel->WB});
@@ -3824,7 +4040,7 @@ perfModel->MEM = n_MEM;
 // LoadWB
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
-perfModel->regModel.setXd(n_LoadWB);
+perfModel->setRegWriteReady(n_LoadWB);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -3861,7 +4077,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3872,7 +4091,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -3892,7 +4111,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // MEM
 uint64_t n_MEM;
 n_MEM = std::max({n_DCache, perfModel->WB});
@@ -3900,7 +4122,7 @@ perfModel->MEM = n_MEM;
 // LoadWB
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
-perfModel->regModel.setXd(n_LoadWB);
+perfModel->setRegWriteReady(n_LoadWB);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -3937,7 +4159,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;
@@ -3948,7 +4173,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -3968,7 +4193,10 @@ n_EX = std::max({n_ALU, n_DTLB, n_LSUReq, perfModel->MEM});
 perfModel->EX = n_EX;
 // DCache
 uint64_t n_DCache;
-n_DCache = n_EX + perfModel->dCacheModel.getDelay();
+uint64_t n_DCacheDelay;
+n_DCacheDelay = perfModel->dCacheModel.getDelay();
+n_DCache = n_EX + n_DCacheDelay;
+perfModel->setDCacheInstrumentation(n_DCacheDelay > 0 ? n_DCacheDelay - 1 : 0, perfModel->dCacheModel.getMiss());
 // MEM
 uint64_t n_MEM;
 n_MEM = std::max({n_DCache, perfModel->WB});
@@ -3976,7 +4204,7 @@ perfModel->MEM = n_MEM;
 // LoadWB
 uint64_t n_LoadWB;
 n_LoadWB = n_MEM + 1;
-perfModel->regModel.setXd(n_LoadWB);
+perfModel->setRegWriteReady(n_LoadWB);
 // Reg
 uint64_t n_Reg;
 n_Reg = n_MEM + 1;
@@ -4013,12 +4241,16 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
+perfModel->setBranchInstrumentation(true, false, 0);
 // IF
 uint64_t n_IF;
 n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
@@ -4028,10 +4260,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -4089,12 +4321,16 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
+perfModel->setBranchInstrumentation(true, false, 0);
 // IF
 uint64_t n_IF;
 n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
@@ -4104,10 +4340,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -4165,12 +4401,16 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
+perfModel->setBranchInstrumentation(true, false, 0);
 // IF
 uint64_t n_IF;
 n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
@@ -4180,10 +4420,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -4241,12 +4481,16 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
+perfModel->setBranchInstrumentation(true, false, 0);
 // IF
 uint64_t n_IF;
 n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
@@ -4256,10 +4500,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -4317,12 +4561,16 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
+perfModel->setBranchInstrumentation(true, false, 0);
 // IF
 uint64_t n_IF;
 n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
@@ -4332,10 +4580,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -4393,12 +4641,16 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p(n_BPU);
+perfModel->setBranchInstrumentation(true, false, 0);
 // IF
 uint64_t n_IF;
 n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
@@ -4408,10 +4660,10 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // uA_OF_B
 uint64_t n_uA_OF_B;
-n_uA_OF_B = std::max({n_IF, perfModel->regModel.getXb()});
+n_uA_OF_B = std::max({n_IF, perfModel->getRawReadyB(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, n_uA_OF_B, perfModel->EX});
@@ -4469,12 +4721,16 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p_j(n_BPU);
+perfModel->setBranchInstrumentation(true, false, 0);
 // IF
 uint64_t n_IF;
 n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
@@ -4489,7 +4745,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -4540,12 +4796,16 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // BPU
 uint64_t n_BPU;
 n_BPU = n_Enter + 1;
 perfModel->dynBranchPredModel.setPc_p_jr(n_BPU);
+perfModel->setBranchInstrumentation(true, false, 0);
 // IF
 uint64_t n_IF;
 n_IF = std::max({n_PC_Gen, n_uA_PcCorrect, n_uA_CacheBlock, n_uA_PcPredict, n_ITLB, n_ICache, n_BPU, perfModel->ID});
@@ -4555,7 +4815,7 @@ uint64_t n_Decoder;
 n_Decoder = n_IF + 1;
 // uA_OF_A
 uint64_t n_uA_OF_A;
-n_uA_OF_A = std::max({n_IF, perfModel->regModel.getXa()});
+n_uA_OF_A = std::max({n_IF, perfModel->getRawReadyA(n_Decoder)});
 // ID
 uint64_t n_ID;
 n_ID = std::max({n_Decoder, n_uA_OF_A, perfModel->EX});
@@ -4563,7 +4823,7 @@ perfModel->ID = n_ID;
 // ALU
 uint64_t n_ALU;
 n_ALU = n_ID + 1;
-perfModel->regModel.setXd(n_ALU);
+perfModel->setRegWriteReady(n_ALU);
 // EX
 uint64_t n_EX;
 n_EX = std::max({n_ALU, perfModel->MEM});
@@ -4614,7 +4874,10 @@ uint64_t n_ITLB;
 n_ITLB = n_Enter + 1;
 // ICache
 uint64_t n_ICache;
-n_ICache = n_Enter + perfModel->iCacheModel.getDelay();
+uint64_t n_ICacheDelay;
+n_ICacheDelay = perfModel->iCacheModel.getDelay();
+n_ICache = n_Enter + n_ICacheDelay;
+perfModel->setICacheInstrumentation(n_ICacheDelay > 0 ? n_ICacheDelay - 1 : 0, perfModel->iCacheModel.getMiss());
 perfModel->iCacheModel.setIc_in(n_ICache);
 // IF
 uint64_t n_IF;

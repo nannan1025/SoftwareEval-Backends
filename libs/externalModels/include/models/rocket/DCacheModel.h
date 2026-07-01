@@ -42,6 +42,7 @@ public:
 
   // Info print
   std::string getInfo_miss(void) { return std::to_string(isMiss); };
+  bool getMiss(void) const { return isMiss; };
   
   // Trace value
   uint64_t* addr_ptr;
