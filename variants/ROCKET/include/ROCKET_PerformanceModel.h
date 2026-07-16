@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <string>
 #include <cstdint>
+#include <unordered_map>
+#include <vector>
 
 #include "PerformanceModel.h"
 #include "Channel.h"
@@ -63,7 +65,10 @@ public:
   uint64_t* rs1_ptr = nullptr;
   uint64_t* rs2_ptr = nullptr;
   uint64_t* rd_ptr = nullptr;
+  uint64_t* imm_ptr = nullptr;
   uint64_t instr_id = 0;
+  std::string current_instr = "null";
+  uint64_t uses_imm = 0;
   uint64_t uses_rs1 = 0;
   uint64_t uses_rs2 = 0;
   uint64_t uses_rd = 0;
@@ -78,6 +83,7 @@ public:
   uint64_t branch_mispredict = 0;
   uint64_t branch_redirect_cycles = 0;
   uint64_t divider_delay_cycles = 0;
+  std::unordered_map<std::string, uint64_t> schedulingTraceValues;
 
 
   // External Resource Models
@@ -90,6 +96,20 @@ public:
 
   uint64_t getRawReadyA(uint64_t baseCycle);
   uint64_t getRawReadyB(uint64_t baseCycle);
+  static const std::vector<std::string>& getSchedulingTraceColumns();
+  void resetTraceInstrumentation();
+  void recordSchedVar(const std::string& name, uint64_t value)
+  {
+    schedulingTraceValues[name] = value;
+  };
+  void setInstructionInfo(const std::string& instrName, bool useRs1, bool useRs2, bool useRd, bool useImm)
+  {
+    current_instr = instrName;
+    uses_rs1 = useRs1 ? 1 : 0;
+    uses_rs2 = useRs2 ? 1 : 0;
+    uses_rd = useRd ? 1 : 0;
+    uses_imm = useImm ? 1 : 0;
+  };
   void setOperandUse(bool useRs1, bool useRs2, bool useRd)
   {
     uses_rs1 = useRs1 ? 1 : 0;
