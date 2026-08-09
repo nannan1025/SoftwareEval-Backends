@@ -51,13 +51,17 @@ public:
 private:
   
   // Cache state
-  // TODO: Associativity hard-coded to 4
-  //ICacheEntry tag_cache[4][256];
-  //bool valid_cache[4][256]= {false};
-  static constexpr int WAYS = 4;
-  static constexpr int SETS = 64; // 暂时照抄 cva6，后面可按 Rocket 配置改
+  static constexpr int ICACHE_NUM_SETS   = 64;
+  static constexpr int ICACHE_NUM_WAYS   = 8;
+  static constexpr int ICACHE_LINE_BYTES = 64;
+  static constexpr int ICACHE_OFFSET_BITS = 6;
+  static constexpr int ICACHE_INDEX_BITS  = 6;
 
-  ICacheEntry tag_cache[WAYS][SETS];
+  static constexpr uint64_t MEMORY_BASE = 0x80000000ULL;
+  static constexpr uint64_t MEMORY_SIZE = 0x10000000ULL;
+  static constexpr uint64_t MEMORY_END  = MEMORY_BASE + MEMORY_SIZE;
+
+  ICacheEntry tag_cache[ICACHE_NUM_WAYS][ICACHE_NUM_SETS];
 
   bool isMiss = false;
 
@@ -70,7 +74,7 @@ private:
 
   // Support functions
   bool inCache(uint64_t);
-  bool cachable(uint64_t pc_) { return ((0x80000000 <= pc_) && (pc_ < 0xC0000000)) ? true : false; };
+  bool cachable(uint64_t pc_) { return ((MEMORY_BASE <= pc_) && (pc_ < MEMORY_END)) ? true : false; };
   void updateCache(uint64_t, uint64_t);
   int lfsr(void);
 };

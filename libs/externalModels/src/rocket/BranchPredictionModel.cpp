@@ -45,19 +45,14 @@ void BranchHistoryTable::advanceHistory(bool taken_)
 bool BranchHistoryTable::getPrediction(uint64_t pc_, uint64_t imm_)
 {
   (void)imm_;
-  return tab[getIndex(pc_)].counter >= 2;
+  lastIndex = getIndex(pc_);
+  return tab[lastIndex].prediction;
 }
 
 void BranchHistoryTable::update(uint64_t pc_, bool taken_)
-{  
-  auto& counter = tab[getIndex(pc_)].counter;
-  if (taken_) {
-    if (counter < 3) {
-      counter++;
-    }
-  } else if (counter > 0) {
-    counter--;
-  }
+{
+  lastIndex = getIndex(pc_);
+  tab[lastIndex].prediction = taken_;
   advanceHistory(taken_);
 }
 
@@ -86,16 +81,18 @@ uint64_t ReturnAddressStack::pop(void)
 
 uint64_t BranchTargetBuffer::getPrediction(uint64_t pc_)
 {
+  lastHit = false;
   for (const auto& entry : tab) {
     if(entry.valid && entry.pc == pc_)
     {
+      lastHit = true;
       return entry.addr;
     }
   }
   return INVALID_BRANCH_ADDRESS;
 }
 
-void BranchTargetBuffer::update(uint64_t pc_, uint64_t taddr_)
+void BranchTargetBuffer::update(uint64_t pc_, uint64_t taddr_, uint64_t kind_)
 {
   int index = -1;
   for (int i = 0; i < ENTRIES; ++i) {
@@ -114,8 +111,26 @@ void BranchTargetBuffer::update(uint64_t pc_, uint64_t taddr_)
   tab[index].valid = true;
   tab[index].pc = pc_;
   tab[index].addr = taddr_;
+  tab[index].kind = kind_;
 }
 
+void BranchPredictionModel::clearTraceInfo(void)
+{
+  trace_isControl = false;
+  trace_taken = false;
+  trace_predictedTaken = false;
+  trace_directionMispredict = false;
+  trace_targetMispredict = false;
+  trace_mispredict = false;
+  trace_predictedTarget = 0;
+  trace_actualTarget = 0;
+  trace_predictorComponent = "none";
+  trace_redirectSourcePc = 0;
+  trace_redirectSourceComponent = "none";
+  trace_btbHit = false;
+  trace_bhtIndex = 0;
+  trace_rasUsed = false;
+}
 
 void BranchPredictionModel::setPc_p(uint64_t pc_p_)
 {
@@ -123,16 +138,56 @@ void BranchPredictionModel::setPc_p(uint64_t pc_p_)
   branchPc = pc_ptr[getInstrIndex()];
   branchTarget = brTarget_ptr[getInstrIndex()];
   branchPredictedTaken = bht.getPrediction(branchPc, imm_ptr[getInstrIndex()]);
+  branchBhtIndex = (uint64_t)bht.getLastIndex();
+
+  uint64_t btbTarget = btb.getPrediction(branchPc);
+  branchBtbHit = btb.getLastHit();
+  branchPredictedTarget = (branchPredictedTaken && branchBtbHit) ? btbTarget : 0;
+
+  trace_isControl = true;
+  trace_taken = false;
+  trace_predictedTaken = branchPredictedTaken;
+  trace_directionMispredict = false;
+  trace_targetMispredict = false;
+  trace_mispredict = false;
+  trace_predictedTarget = branchPredictedTarget;
+  trace_actualTarget = 0;
+  trace_predictorComponent = branchBtbHit ? "BHT+BTB" : "BHT";
+  trace_btbHit = branchBtbHit;
+  trace_bhtIndex = branchBhtIndex;
+  trace_rasUsed = false;
+  pendingSourcePc = branchPc;
+  pendingSourceComponent = trace_predictorComponent;
   t_pc_pt = pc_p_;  
 }
 
 void BranchPredictionModel::setPc_p_j(uint64_t pc_p_)
 {
   jump_flag = true;
+  branchPc = pc_ptr[getInstrIndex()];
+  branchTarget = brTarget_ptr[getInstrIndex()];
+  branchPredictedTaken = true;
+  branchPredictedTarget = branchTarget;
+  branchBtbHit = true;
+
+  trace_isControl = true;
+  trace_taken = true;
+  trace_predictedTaken = true;
+  trace_directionMispredict = false;
+  trace_targetMispredict = false;
+  trace_mispredict = false;
+  trace_predictedTarget = branchPredictedTarget;
+  trace_actualTarget = branchTarget;
+  trace_predictorComponent = "JAL";
+  trace_btbHit = branchBtbHit;
+  trace_bhtIndex = 0;
+  trace_rasUsed = false;
+  pendingSourcePc = branchPc;
+  pendingSourceComponent = trace_predictorComponent;
 
   if(isCall())
   {
-    // TODO: Different handling for compressed
+    // TODO: Different handling for compressed instructions.
     ras.push(pc_ptr[getInstrIndex()] + 4);
   }
 
@@ -142,122 +197,210 @@ void BranchPredictionModel::setPc_p_j(uint64_t pc_p_)
 void BranchPredictionModel::setPc_p_jr(uint64_t pc_p_)
 {
   jumpR_flag = true;
+  return_flag = false;
+  jumpR_ras_used = false;
+  jumpR_btb_hit = false;
 
-  if(isCall() | isReturn())
+  branchPc = pc_ptr[getInstrIndex()];
+  branchTarget = INVALID_BRANCH_ADDRESS;
+  branchPredictedTaken = true;
+
+  const bool call = isCall();
+  const bool ret = isReturn();
+  jumpR_call = call;
+
+  if(ret)
   {
-    branchTarget = INVALID_BRANCH_ADDRESS;
-    
-    if(isReturn())
-    {
-      return_flag = true;
-      branchTarget = ras.pop();
-    }
-          
-    if(isCall())
-    {
-      // TODO: Different handling for compressed
-      ras.push(pc_ptr[getInstrIndex()] + 4);
-    }
+    return_flag = true;
+    jumpR_ras_used = true;
+    branchTarget = ras.pop();
+    jumpR_btb_hit = (branchTarget != INVALID_BRANCH_ADDRESS);
   }
-
-  // JumpR if not call or return
   else
   {
-    branchPc = pc_ptr[getInstrIndex()];
     branchTarget = btb.getPrediction(branchPc);
+    jumpR_btb_hit = btb.getLastHit();
   }
+
+  if(call)
+  {
+    // TODO: Different handling for compressed instructions.
+    ras.push(pc_ptr[getInstrIndex()] + 4);
+  }
+
+  branchPredictedTarget = (branchTarget != INVALID_BRANCH_ADDRESS) ? branchTarget : 0;
+
+  trace_isControl = true;
+  trace_taken = true;
+  trace_predictedTaken = true;
+  trace_directionMispredict = false;
+  trace_targetMispredict = false;
+  trace_mispredict = false;
+  trace_predictedTarget = branchPredictedTarget;
+  trace_actualTarget = 0;
+  trace_predictorComponent = return_flag ? "RAS" : (jumpR_btb_hit ? "BTB" : (call ? "CALL" : "JALR"));
+  trace_btbHit = jumpR_btb_hit;
+  trace_bhtIndex = 0;
+  trace_rasUsed = jumpR_ras_used;
+  pendingSourcePc = branchPc;
+  pendingSourceComponent = trace_predictorComponent;
 
   t_pc_pt = pc_p_;
 }
 
-// Return t_pc_mp in case of mispredict, else 0
-// Do evalutation and updates here, as this function is always called before getPc_pt
+// Return t_pc_mp in case of mispredict, else 0.
+// Evaluation and updates happen here because this function is always called before getPc_pt.
 uint64_t BranchPredictionModel::getPc_mp(void)
 {
   isMispredict = false;
   isTaken = false;
+  isDirectionMispredict = false;
+  isTargetMispredict = false;
+  clearTraceInfo();
   
-  // Check if previous instr was a branch
+  // Check if previous instr was a conditional branch.
   if(branch_flag)
   {
-    // Determine if branch was taken
     uint64_t curPc = pc_ptr[getInstrIndex()];
     isTaken = (curPc == branchTarget);
-    
-    // Determine if branch was mispredicted
-    isMispredict = branchPredictedTaken != isTaken;
-    
-    // Update BHT/history for every resolved conditional branch.
+    uint64_t actualTarget = isTaken ? branchTarget : curPc;
+
+    isDirectionMispredict = (branchPredictedTaken != isTaken);
+    isTargetMispredict = branchPredictedTaken && isTaken && (!branchBtbHit || branchPredictedTarget != actualTarget);
+    isMispredict = isDirectionMispredict || isTargetMispredict;
+
     bht.update(branchPc, isTaken);
+    if(isTaken && (!branchBtbHit || branchPredictedTarget != actualTarget))
+    {
+      btb.update(branchPc, actualTarget, CF_BRANCH);
+    }
+
+    trace_isControl = true;
+    trace_taken = isTaken;
+    trace_predictedTaken = branchPredictedTaken;
+    trace_directionMispredict = isDirectionMispredict;
+    trace_targetMispredict = isTargetMispredict;
+    trace_mispredict = isMispredict;
+    trace_predictedTarget = branchPredictedTarget;
+    trace_actualTarget = actualTarget;
+    trace_predictorComponent = branchBtbHit ? "BHT+BTB" : "BHT";
+    trace_btbHit = branchBtbHit;
+    trace_bhtIndex = branchBhtIndex;
+    trace_rasUsed = false;
+
+    if(isMispredict)
+    {
+      trace_redirectSourcePc = pendingSourcePc;
+      trace_redirectSourceComponent = pendingSourceComponent;
+    }
     
-    // In case of mispredict: Return time when corrected address is available (t_pc_mp)
     if(isMispredict)
     {
       return t_pc_mp;
     }
   }
 
-  // Check if previous instr was jump with immediate base
+  // Check if previous instr was jump with immediate base.
   else if(jump_flag)
   {
-    isTaken = true; // used for info prints
-  }
-  
-  // Check if previous instr was jump with register base
-  else if(jumpR_flag)
-  {
-    // For a jump, branch is always taken
-    isTaken = true; // Used for info print
-    
-    // Determine if branch was mispredicted
-    uint64_t curPc = pc_ptr[getInstrIndex()];
-    isMispredict = (curPc != branchTarget);
+    uint64_t actualTarget = branchTarget;
+    isTaken = true;
+    isDirectionMispredict = false;
+    isTargetMispredict = false;
+    isMispredict = false;
 
-    // Update BTB
-    if(isMispredict & !return_flag)
-    {
-      btb.update(branchPc, curPc);
-    }
-    
-    // On mispredict: Return time when corrected address is available (t_pc_mp)
+    trace_isControl = true;
+    trace_taken = true;
+    trace_predictedTaken = true;
+    trace_directionMispredict = false;
+    trace_targetMispredict = isTargetMispredict;
+    trace_mispredict = isMispredict;
+    trace_predictedTarget = branchPredictedTarget;
+    trace_actualTarget = actualTarget;
+    trace_predictorComponent = "JAL";
+    trace_btbHit = branchBtbHit;
+    trace_bhtIndex = 0;
+    trace_rasUsed = false;
+
     if(isMispredict)
     {
       return t_pc_mp;
     }
   }
   
-  // Default: Branch/Jump was not mispredicted
-  return 0; // Use 0 to disregard the pc_mp connector in any max operation
+  // Check if previous instr was jump with register base.
+  else if(jumpR_flag)
+  {
+    uint64_t curPc = pc_ptr[getInstrIndex()];
+    isTaken = true;
+    isDirectionMispredict = false;
+    isTargetMispredict = (branchPredictedTarget == 0 || curPc != branchPredictedTarget);
+    isMispredict = isTargetMispredict;
+
+    if(isTargetMispredict && !return_flag)
+    {
+      btb.update(branchPc, curPc, jumpR_call ? CF_CALL : CF_JALR);
+    }
+
+    trace_isControl = true;
+    trace_taken = true;
+    trace_predictedTaken = true;
+    trace_directionMispredict = false;
+    trace_targetMispredict = isTargetMispredict;
+    trace_mispredict = isMispredict;
+    trace_predictedTarget = branchPredictedTarget;
+    trace_actualTarget = curPc;
+    trace_predictorComponent = pendingSourceComponent;
+    trace_btbHit = jumpR_btb_hit;
+    trace_bhtIndex = 0;
+    trace_rasUsed = jumpR_ras_used;
+    
+    if(isMispredict)
+    {
+      trace_redirectSourcePc = pendingSourcePc;
+      trace_redirectSourceComponent = pendingSourceComponent;
+    }
+    
+    if(isMispredict)
+    {
+      return t_pc_mp;
+    }
+  }
+  
+  // Default: Branch/Jump was not mispredicted.
+  return 0; // Use 0 to disregard the pc_mp connector in any max operation.
 }
 
-// Return t_pc_pt in case of a correctly predicted taken branch / jump, else 0
-// Clear all flags here, as it is always called after getPc_mp
+// Return t_pc_pt in case of a correctly predicted taken branch / jump, else 0.
+// Clear all pending control-flow flags here, as this is always called after getPc_mp.
 uint64_t BranchPredictionModel::getPc_pt(void)
 {
-  // In case of branch: Check if corretly predicted and taken
   if(branch_flag)
   {
     branch_flag = false;
-    if(!isMispredict & isTaken)
+    if(isTaken && !isMispredict)
     {
       pc_pt = t_pc_pt;
       return t_pc_pt;
-    }   
+    }
   }
 
-  // In case of (only imm-dependent) jump: Always taken
   if(jump_flag)
   {
     jump_flag = false;
-    pc_pt = t_pc_pt;
-    return t_pc_pt;
+    if(!isMispredict)
+    {
+      pc_pt = t_pc_pt;
+      return t_pc_pt;
+    }
   }
 
-  // In case of register-base jump
   if(jumpR_flag)
   {
     jumpR_flag = false;
     return_flag = false;
+    jumpR_ras_used = false;
+    jumpR_call = false;
     if(!isMispredict)
     {
       pc_pt = t_pc_pt;
@@ -265,9 +408,8 @@ uint64_t BranchPredictionModel::getPc_pt(void)
     }
   }
   
-  // Default: Branch/Jump was not correctly predicted
   pc_pt = 0;
-  return 0; // Use 0 to disregard the pc_pt connector in any max operation
+  return 0; // Use 0 to disregard the pc_pt connector in any max operation.
 }
 
 } // namespace rocket

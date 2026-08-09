@@ -42,6 +42,7 @@ private:
 	CV32E40P_LLM,
 	FIVE_NFW_NPRE,
 	FIVE_FW_DYPRE,
+	RC,
 	CV32E40P_QWEN_1,
 	CVA62,
 	InstructionTrace_RV64,

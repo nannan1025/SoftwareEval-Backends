@@ -33,9 +33,9 @@
 #include "SHAKTI_C_Printer.h"
 #include "SHAKTI_C_PerformanceModel.h"
 
+#include "ROCKET_PerformanceModel.h"
 #include "ROCKET_Printer.h"
 #include "ROCKET_Channel.h"
-#include "ROCKET_PerformanceModel.h"
 
 #include "CV32E40P_CORE_Printer.h"
 #include "CV32E40P_CORE_PerformanceModel.h"
@@ -72,6 +72,10 @@
 #include "FIVE_FW_DYPRE_Printer.h"
 #include "FIVE_FW_DYPRE_Channel.h"
 
+#include "RC_Channel.h"
+#include "RC_Printer.h"
+#include "RC_PerformanceModel.h"
+
 #include "CV32E40P_QWEN_1_Channel.h"
 #include "CV32E40P_QWEN_1_PerformanceModel.h"
 #include "CV32E40P_QWEN_1_Printer.h"
@@ -105,6 +109,7 @@ int Factory::getVariantHandle(std::string varName_)
 	if(varName_ == "CV32E40P_LLM"){ return CV32E40P_LLM; }
 	if(varName_ == "FIVE_NFW_NPRE"){ return FIVE_NFW_NPRE; }
 	if(varName_ == "FIVE_FW_DYPRE"){ return FIVE_FW_DYPRE; }
+	if(varName_ == "RC"){ return RC; }
 	if(varName_ == "CV32E40P_QWEN_1"){ return CV32E40P_QWEN_1; }
 	if(varName_ == "CVA62"){ return CVA62; }
 	if(varName_ == "InstructionTrace_RV64"){ return InstructionTrace_RV64; }
@@ -129,6 +134,7 @@ Channel* Factory::getChannel(int var_)
 	case CV32E40P_LLM: return new CV32E40P_LLM_Channel();
 	case FIVE_NFW_NPRE: return new FIVE_NFW_NPRE_Channel();
 	case FIVE_FW_DYPRE: return new FIVE_FW_DYPRE_Channel();
+	case RC: return new RC_Channel();
 	case CV32E40P_QWEN_1: return new CV32E40P_QWEN_1_Channel();
 	case CVA62: return new CVA62_Channel();
 	case InstructionTrace_RV64: return new InstructionTrace_RV64_Channel();
@@ -150,14 +156,14 @@ Backend* Factory::getPerformanceEstimator(int var_)
 	case SHAKTI_C:
 		perfModel = new SHAKTI_C::SHAKTI_C_PerformanceModel();
 		break;
+	case ROCKET:
+		perfModel = new ROCKET::ROCKET_PerformanceModel();
+		break;
 	case CV32E40P_CORE:
 		perfModel = new CV32E40P_CORE::CV32E40P_CORE_PerformanceModel();
 		break;
 	case CVA6:
 		perfModel = new CVA6::CVA6_PerformanceModel();
-		break;
-	case ROCKET:
-		perfModel = new ROCKET::ROCKET_PerformanceModel();
 		break;
 	case CVA6_QWEN_1:
 		perfModel = new CVA6_QWEN_1::CVA6_QWEN_1_PerformanceModel();
@@ -176,6 +182,9 @@ Backend* Factory::getPerformanceEstimator(int var_)
 		break;
 	case FIVE_FW_DYPRE:
 		perfModel = new FIVE_FW_DYPRE::FIVE_FW_DYPRE_PerformanceModel();
+		break;
+	case RC:
+		perfModel = new RC::RC_PerformanceModel();
 		break;
 	case CV32E40P_QWEN_1:
 		perfModel = new CV32E40P_QWEN_1::CV32E40P_QWEN_1_PerformanceModel();
@@ -242,6 +251,9 @@ Backend* Factory::getTracePrinter(int var_)
 		break;
 	case FIVE_FW_DYPRE:
 		printer = new FIVE_FW_DYPRE_Printer();
+		break;
+	case RC:
+		printer = new RC_Printer();
 		break;
 	case CV32E40P_QWEN_1:
 		printer = new CV32E40P_QWEN_1_Printer();

@@ -17,8 +17,8 @@
 /********************* AUTO GENERATE FILE (create by M2-ISA-R::Trace-Generator) *********************/
 
 
-#ifndef SWEVAL_BACKENDS_ROCKET_CHANNEL_H
-#define SWEVAL_BACKENDS_ROCKET_CHANNEL_H
+#ifndef SWEVAL_BACKENDS_RC_CHANNEL_H
+#define SWEVAL_BACKENDS_RC_CHANNEL_H
 
 #include "Channel.h"
 
@@ -26,12 +26,12 @@
 #include <stdbool.h>
 #include <cstdint>
 
-class ROCKET_Channel: public Channel
+class RC_Channel: public Channel
 {
 public:
 
-  ROCKET_Channel() {};
-  ~ROCKET_Channel() {};
+  RC_Channel() {};
+  ~RC_Channel() {};
 
   uint64_t pc [100];
   uint64_t brTarget [100];
@@ -39,11 +39,9 @@ public:
   uint64_t rd [100];
   uint64_t imm [100];
   uint64_t rs2 [100];
-  uint64_t rs1_data [100];
-  uint64_t rs2_data [100];
   uint64_t addr [100];
 
   virtual void *getTraceValueHook(std::string);
 };
 
-#endif // SWEVAL_BACKENDS_ROCKET_CHANNEL_H
+#endif // SWEVAL_BACKENDS_RC_CHANNEL_H

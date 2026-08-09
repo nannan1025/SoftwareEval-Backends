@@ -17,7 +17,6 @@
 // TODO: Proof-of-concept model, taken from Robert (more or less)!
 
 #include "models/rocket/DCacheModel.h"
-#include <cmath>
 #include <cstdint>
 
 namespace rocket{
@@ -45,13 +44,12 @@ int DCacheModel::getDelay(void)
 bool DCacheModel::inCache(uint64_t addr_)
 {
 
-  // uint64_t tag = (addr_ & 0x00FFFFFFFFFFF000) >> 12; // pc_[55:12]
-  // uint64_t index = (addr_ & 0x0000000000000FF0) >> 4; // pc_[11:4]
-  uint64_t line   = addr_ >> 6;          // 去掉 offset
-  uint64_t index  = line & (SETS - 1);   // 比如 SETS=64 → &0x3F
-  uint64_t tag    = line >> (uint64_t)log2(SETS);  // 剩下高位当 tag
-  for (int way = 0; way < WAYS; ++way) {
-    if (tag_cache[way][index].tag == tag) {
+  uint64_t line = addr_ >> DCACHE_OFFSET_BITS;
+  uint64_t index = line & (DCACHE_NUM_SETS - 1);
+  uint64_t tag = line >> DCACHE_INDEX_BITS;
+
+  for (int way = 0; way < DCACHE_NUM_WAYS; ++way) {
+    if (tag_cache[way][index].valid && tag_cache[way][index].tag == tag) {
       // hit
       return true;
     }
@@ -66,7 +64,7 @@ void DCacheModel::updateCache(uint64_t tag_, uint64_t index_)
 {
   int way = -1;
 
-  for(int way_i=0; way_i<WAYS; way_i++)
+  for(int way_i=0; way_i<DCACHE_NUM_WAYS; way_i++)
   {
     if(!tag_cache[way_i][index_].valid)
     {

@@ -17,8 +17,8 @@
 /********************* AUTO GENERATE FILE (create by M2-ISA-R::Trace-Generator) *********************/
 
                    
-#ifndef SWEVAL_BACKENDS_ROCKET_PRINTER_H
-#define SWEVAL_BACKENDS_ROCKET_PRINTER_H
+#ifndef SWEVAL_BACKENDS_RC_PRINTER_H
+#define SWEVAL_BACKENDS_RC_PRINTER_H
 
 #include "Printer.h"
 
@@ -27,11 +27,11 @@
 #include <string>
 #include <cstdint>
 
-class ROCKET_Printer : public Printer
+class RC_Printer : public Printer
 {
 public:
 
-  ROCKET_Printer();
+  RC_Printer();
 
   virtual void connectChannel(Channel*);
   virtual std::string getPrintHeader(void);
@@ -55,4 +55,4 @@ private:
   uint64_t* addr_ptr;
 };
 
-#endif // SWEVAL_BACKENDS_ROCKET_PRINTER_H
+#endif // SWEVAL_BACKENDS_RC_PRINTER_H

@@ -26,9 +26,15 @@ int ICacheModel::getDelay(void)
 {
     uint64_t pc = pc_ptr[getInstrIndex()];
 
+    if(!cachable(pc))
+    {
+        isMiss = true;
+        return MEMORY_DELAY;
+    }
+
     isMiss = !inCache(pc);
 
-    if(!cachable(pc) || isMiss)
+    if(isMiss)
     {
         return MEMORY_DELAY;
     }
@@ -37,16 +43,12 @@ int ICacheModel::getDelay(void)
 
 bool ICacheModel::inCache(uint64_t pc_)
 {
-    // uint64_t index = (pc_ >> 6) & 0xFF;    // 用 8 位 index → 256 sets
-    // uint64_t tag   = pc_ >> (6 + 8);       // 其余高位
-    uint64_t index = (pc_ >> 6) & (SETS - 1);  // (pc_ >> 6) & 0x3F
+    uint64_t line = pc_ >> ICACHE_OFFSET_BITS;
+    uint64_t index = line & (ICACHE_NUM_SETS - 1);
+    uint64_t tag = line >> ICACHE_INDEX_BITS;
 
-    // tag: bits [63:12]
-    uint64_t tag = pc_ >> 12;
-
-
-    for (int way = 0; way < WAYS; ++way) {
-        if (tag_cache[way][index].tag == tag) {
+    for (int way = 0; way < ICACHE_NUM_WAYS; ++way) {
+        if (tag_cache[way][index].valid && tag_cache[way][index].tag == tag) {
             // hit
             return true;
         }
@@ -60,7 +62,7 @@ void ICacheModel::updateCache(uint64_t tag_, uint64_t index_)
 {
     int way = -1;
 
-    for(int i=0; i<WAYS; i++)
+    for(int i=0; i<ICACHE_NUM_WAYS; i++)
     {
       if(!tag_cache[i][index_].valid)
       {
@@ -83,7 +85,7 @@ int ICacheModel::lfsr(void)
     static uint8_t shift_state = 0;
     uint8_t shift_in = ~(((shift_state & 0x80) >> 7) ^ ((shift_state & 0x08) >> 3) ^ ((shift_state & 0x04) >> 2) ^ ((shift_state & 0x02) >> 1));
     shift_state = (shift_state << 1) | (shift_in & 0x01);
-    return (shift_state & 0x03);
+    return (shift_state & 0x07);
 }
 
 } // namespace rocket

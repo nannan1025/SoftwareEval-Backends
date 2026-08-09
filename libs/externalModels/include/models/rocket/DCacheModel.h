@@ -37,7 +37,7 @@ class DCacheModel : public ResourceModel
 public:
 
   // TODO: Check if delays are matching observations!
-  DCacheModel(PerformanceModel* parent_) : ResourceModel("DCacheModel", parent_), CACHE_DELAY(1), MEMORY_DELAY(39), NOT_CACHABLE_DELAY(39) {};
+  DCacheModel(PerformanceModel* parent_) : ResourceModel("DCacheModel", parent_), CACHE_DELAY(1), MEMORY_DELAY(6), NOT_CACHABLE_DELAY(6) {};
   virtual int getDelay(void);
 
   // Info print
@@ -50,15 +50,21 @@ public:
 private:
 
   // Cache state
-  static constexpr int WAYS      = 8;
-  static constexpr int SETS      = 256;      // 后面可以按 Rocket 配置改
-  static constexpr int LINE_SIZE = 64;      // 64B data line
+  static constexpr int DCACHE_NUM_SETS   = 64;
+  static constexpr int DCACHE_NUM_WAYS   = 8;
+  static constexpr int DCACHE_LINE_BYTES = 64;
+  static constexpr int DCACHE_OFFSET_BITS = 6;
+  static constexpr int DCACHE_INDEX_BITS  = 6;
 
-  DCacheEntry tag_cache[WAYS][SETS];
+  static constexpr uint64_t MEMORY_BASE = 0x80000000ULL;
+  static constexpr uint64_t MEMORY_SIZE = 0x10000000ULL;
+  static constexpr uint64_t MEMORY_END  = MEMORY_BASE + MEMORY_SIZE;
+
+  DCacheEntry tag_cache[DCACHE_NUM_WAYS][DCACHE_NUM_SETS];
   
   // Support functions
   bool inCache(uint64_t);
-  bool cachable(uint64_t addr_) { return ((0x80000000 <= addr_) && (addr_ < 0xC0000000)) ? true : false; };
+  bool cachable(uint64_t addr_) { return ((MEMORY_BASE <= addr_) && (addr_ < MEMORY_END)) ? true : false; };
   void updateCache(uint64_t, uint64_t);
   int lfsr(void);
 

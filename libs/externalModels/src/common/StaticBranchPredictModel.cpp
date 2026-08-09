@@ -44,11 +44,13 @@ uint64_t StaticBranchPredictModel::getPc(void)
     // Always predict branch-not-taken
     if(pc_ptr[getInstrIndex()] == branchTarget)
     {
-      return pc_np;
+      // return pc_np;
+      return pc_p;
     }
     else
     {
-      return pc_p;
+      // return pc_p;
+      return pc_np;
     }
   }
 }

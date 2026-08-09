@@ -17,23 +17,23 @@
 /********************* AUTO GENERATE FILE (create by M2-ISA-R::Trace-Generator) *********************/
 
 
-#include "ROCKET_Printer.h"
+#include "RC_Printer.h"
 
 #include "Printer.h"
 
-#include "ROCKET_Channel.h"
+#include "RC_Channel.h"
 
 #include <iostream>
 #include <iomanip>
 
-extern InstructionPrinterSet* ROCKET_InstrPrinterSet;
+extern InstructionPrinterSet* RC_InstrPrinterSet;
 
-ROCKET_Printer::ROCKET_Printer(): Printer("ROCKET_Printer", ROCKET_InstrPrinterSet)
+RC_Printer::RC_Printer(): Printer("RC_Printer", RC_InstrPrinterSet)
 {}
 
-void ROCKET_Printer::connectChannel(Channel* ch_)
+void RC_Printer::connectChannel(Channel* ch_)
 {
-  ROCKET_Channel* channel = static_cast<ROCKET_Channel*>(ch_);
+  RC_Channel* channel = static_cast<RC_Channel*>(ch_);
   
   pc_ptr = channel->pc;
   brTarget_ptr = channel->brTarget;
@@ -44,7 +44,7 @@ void ROCKET_Printer::connectChannel(Channel* ch_)
   addr_ptr = channel->addr;
 }
 
-std::string ROCKET_Printer::getPrintHeader(void)
+std::string RC_Printer::getPrintHeader(void)
 {
   std::stringstream caption_strs;	
   caption_strs << std::setfill(' ') << std::setw(18) << std::left << "pc" << " | ";

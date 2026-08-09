@@ -23,29 +23,176 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <vector>
 
 #include "Channel.h"
 
 #include "ROCKET_Channel.h"
 
 #include "models/rocket/BranchPredictionModel.h"
-#include "models/common/StandardRegisterModel.h"
+#include "models/rocket/RocketMulRegisterModel.h"
 #include "models/rocket/ICacheModel.h"
-#include "models/rocket/DividerModel.h"
-#include "models/rocket/DividerUnsignedModel.h"
 #include "models/rocket/DCacheModel.h"
 
 namespace ROCKET{
+
+const std::vector<std::string>& ROCKET_PerformanceModel::getSchedTraceColumns(void)
+{
+  static const std::vector<std::string> columns = {
+    "IF_n_Enter",
+    "IF_n_PC_Gen",
+    "IF_n_uA_PcCorrect",
+    "IF_n_uA_CacheBlock",
+    "IF_n_uA_PcPredict",
+    "IF_n_ITLB",
+    "IF_n_ICache",
+    "IF_n_BPU",
+    "IF_prev_ID",
+    "IF_ext_Pc_mp",
+    "IF_ext_Pc_pt",
+    "IF_ext_Pc_p",
+    "IF_ext_Pc_p_j",
+    "IF_ext_Pc_p_jr",
+    "IF_ext_Ic_out",
+    "ID_n_Decoder",
+    "ID_rs1_ready_cycle",
+    "ID_rs2_ready_cycle",
+    "ID_n_uA_OF_A",
+    "ID_n_uA_OF_B",
+    "ID_prev_EX",
+    "EX_n_ALU",
+    "EX_ext_MulReady",
+    "EX_n_MUL_max",
+    "EX_n_MUL",
+    "EX_ext_DivReady",
+    "EX_n_DIV_max",
+    "EX_n_DIV",
+    "EX_n_DIVU_max",
+    "EX_n_DIVU",
+    "EX_n_EXPass",
+    "EX_n_DTLB",
+    "EX_n_LSUReq",
+    "EX_prev_MEM",
+    "MEM_n_MEMPass",
+    "MEM_n_DCache",
+    "MEM_n_StoreCommit",
+    "MEM_n_Branch",
+    "MEM_n_FlushMem",
+    "MEM_prev_WB",
+    "MEM_ext_Pc_c",
+    "WB_n_Reg",
+    "WB_n_CSR",
+    "WB_n_WBPass",
+    "WB_n_LoadWB"
+  };
+  return columns;
+}
+
+std::string ROCKET_PerformanceModel::getSchedTraceValue(const std::string& name) const
+{
+  auto iter = trace_sched_vars.find(name);
+  if(iter == trace_sched_vars.end())
+  {
+    return "null";
+  }
+  return std::to_string(iter->second);
+}
+
+std::string ROCKET_PerformanceModel::getChannelValue(uint64_t* ptr, int streamInstrIndex) const
+{
+  if(ptr == nullptr)
+  {
+    return "null";
+  }
+  return std::to_string(ptr[streamInstrIndex]);
+}
+
+std::string ROCKET_PerformanceModel::csvEscape(const std::string& value) const
+{
+  bool needsQuotes = value.find_first_of(",\"\n\r") != std::string::npos;
+  if(!needsQuotes)
+  {
+    return value;
+  }
+  std::string escaped = "\"";
+  for(char c : value)
+  {
+    if(c == '"')
+    {
+      escaped += "\"\"";
+    }
+    else
+    {
+      escaped += c;
+    }
+  }
+  escaped += "\"";
+  return escaped;
+}
+
+void ROCKET_PerformanceModel::setInstructionInfo(const std::string& instr, bool usedRs1, bool usedRs2, bool usedRd)
+{
+  trace_instr = instr;
+  trace_used_rs1 = usedRs1;
+  trace_used_rs2 = usedRs2;
+  trace_used_rd = usedRd;
+}
+
+void ROCKET_PerformanceModel::recordSchedVar(const std::string& name, uint64_t value)
+{
+  trace_sched_vars[name] = value;
+}
+
+void ROCKET_PerformanceModel::setICacheInstrumentation(uint64_t delay, bool miss)
+{
+  trace_icache_delay_cycles = delay;
+  trace_icache_miss = miss;
+}
+
+void ROCKET_PerformanceModel::setDCacheInstrumentation(uint64_t delay, bool miss)
+{
+  trace_dcache_delay_cycles = delay;
+  trace_dcache_miss = miss;
+}
+
+void ROCKET_PerformanceModel::setSimMisprediction(uint64_t misprediction)
+{
+  trace_sim_misprediction = misprediction;
+}
+
+void ROCKET_PerformanceModel::setRdReadyCycle(uint64_t cycle)
+{
+  trace_has_rd_ready_cycle = true;
+  trace_rd_ready_cycle = cycle;
+}
+
+void ROCKET_PerformanceModel::resetTraceState(void)
+{
+  trace_instr = "unknown";
+  trace_used_rs1 = false;
+  trace_used_rs2 = false;
+  trace_used_rd = false;
+  trace_has_rd_ready_cycle = false;
+  trace_rd_ready_cycle = 0;
+  trace_icache_miss = false;
+  trace_dcache_miss = false;
+  trace_icache_delay_cycles = 0;
+  trace_dcache_delay_cycles = 0;
+  trace_sim_misprediction = 0;
+  trace_sched_vars.clear();
+}
 
 void ROCKET_PerformanceModel::connectChannel(Channel* channel_)
 {
   ROCKET_Channel* channel = static_cast<ROCKET_Channel*>(channel_);
 
   pc_ptr = channel->pc;
+  rd_ptr = channel->rd;
   rs1_ptr = channel->rs1;
   rs2_ptr = channel->rs2;
-  rd_ptr = channel->rd;
   imm_ptr = channel->imm;
+  rs1_data_ptr = channel->rs1_data;
+  rs2_data_ptr = channel->rs2_data;
 
   dynBranchPredModel.pc_ptr = channel->pc;
   dynBranchPredModel.brTarget_ptr = channel->brTarget;
@@ -59,97 +206,15 @@ void ROCKET_PerformanceModel::connectChannel(Channel* channel_)
 
   iCacheModel.pc_ptr = channel->pc;
 
-  divider.rs1_data_ptr = channel->rs1_data;
-  divider.rs2_data_ptr = channel->rs2_data;
-
-  divider_u.rs1_data_ptr = channel->rs1_data;
-  divider_u.rs2_data_ptr = channel->rs2_data;
-
   dCacheModel.addr_ptr = channel->addr;
 
 }
 
-uint64_t ROCKET_PerformanceModel::getRawReadyA(uint64_t baseCycle)
-{
-  uses_rs1 = 1;
-  uint64_t readyCycle = regModel.getXa();
-  recordSchedVar("ID_rs1_ready_cycle", readyCycle);
-  uint64_t waitCycles = readyCycle > baseCycle ? readyCycle - baseCycle : 0;
-  if(waitCycles > raw_wait_cycles)
-  {
-    raw_wait_cycles = waitCycles;
-    raw_blocking_reg = rs1_ptr[instrIndex];
-    raw_blocking_ready_cycle = readyCycle;
-  }
-  return readyCycle;
-}
-
-uint64_t ROCKET_PerformanceModel::getRawReadyB(uint64_t baseCycle)
-{
-  uses_rs2 = 1;
-  uint64_t readyCycle = regModel.getXb();
-  recordSchedVar("ID_rs2_ready_cycle", readyCycle);
-  uint64_t waitCycles = readyCycle > baseCycle ? readyCycle - baseCycle : 0;
-  if(waitCycles > raw_wait_cycles)
-  {
-    raw_wait_cycles = waitCycles;
-    raw_blocking_reg = rs2_ptr[instrIndex];
-    raw_blocking_ready_cycle = readyCycle;
-  }
-  return readyCycle;
-}
-
-const std::vector<std::string>& ROCKET_PerformanceModel::getSchedulingTraceColumns()
-{
-  static const std::vector<std::string> columns = {
-    "IF_n_Enter",
-    "IF_n_PC_Gen",
-    "IF_n_uA_PcCorrect",
-    "IF_n_uA_CacheBlock",
-    "IF_n_uA_PcPredict",
-    "IF_n_ITLB",
-    "IF_n_ICacheDelay",
-    "IF_n_ICache",
-    "IF_n_BPU",
-    "IF_prev_ID",
-    "IF_ext_Pc_mp",
-    "IF_ext_Ic_out",
-    "IF_ext_Pc_pt",
-    "ID_n_Decoder",
-    "ID_rs1_ready_cycle",
-    "ID_rs2_ready_cycle",
-    "ID_n_uA_OF_A",
-    "ID_n_uA_OF_B",
-    "ID_prev_EX",
-    "EX_n_ALU",
-    "EX_n_MUL",
-    "EX_n_DIVDelay",
-    "EX_n_DIV",
-    "EX_n_DIVUDelay",
-    "EX_n_DIVU",
-    "EX_n_EXPass",
-    "EX_n_DTLB",
-    "EX_n_LSUReq",
-    "EX_prev_MEM",
-    "MEM_n_MEMPass",
-    "MEM_n_DCacheDelay",
-    "MEM_n_DCache",
-    "MEM_n_StoreCommit",
-    "MEM_n_Branch",
-    "MEM_n_FlushMem",
-    "MEM_prev_WB",
-    "WB_n_Reg",
-    "WB_n_CSR",
-    "WB_n_WBPass",
-    "WB_n_LoadWB"
-  };
-  return columns;
-}
-
 uint64_t ROCKET_PerformanceModel::getCycleCount(void)
 {
+  
   return std::max({
-    IF
+    IF 
     ,ID
     ,EX
     ,MEM
@@ -157,139 +222,72 @@ uint64_t ROCKET_PerformanceModel::getCycleCount(void)
   });
 }
 
-void ROCKET_PerformanceModel::resetTraceInstrumentation()
-{
-  current_instr = "null";
-  uses_imm = 0;
-  uses_rs1 = 0;
-  uses_rs2 = 0;
-  uses_rd = 0;
-  raw_wait_cycles = 0;
-  raw_blocking_reg = -1;
-  raw_blocking_ready_cycle = 0;
-  icache_delay_cycles = 0;
-  icache_miss = 0;
-  dcache_delay_cycles = 0;
-  dcache_miss = 0;
-  branch_is_control = 0;
-  branch_mispredict = 0;
-  branch_redirect_cycles = 0;
-  divider_delay_cycles = 0;
-  schedulingTraceValues.clear();
-}
-
 std::string ROCKET_PerformanceModel::getPipelineStream(void)
 {
   std::stringstream ret_strs;
   const int streamInstrIndex = instrIndex > 0 ? instrIndex - 1 : instrIndex;
-  const uint64_t stage_gap_if_id = ID > IF ? ID - IF : 0;
-  const uint64_t stage_gap_id_ex = EX > ID ? EX - ID : 0;
-  const uint64_t stage_gap_ex_mem = MEM > EX ? MEM - EX : 0;
-  const uint64_t stage_gap_mem_wb = WB > MEM ? WB - MEM : 0;
-
-  auto appendNullableReg = [&](bool use, uint64_t* ptr) {
-    if(use && ptr != nullptr)
-      ret_strs << ptr[streamInstrIndex];
-    else
-      ret_strs << "null";
-  };
-
-  ret_strs << (pc_ptr != nullptr ? pc_ptr[streamInstrIndex] : 0);
-  ret_strs << "," << current_instr;
-  ret_strs << ",null";
-  ret_strs << ",";
-  appendNullableReg(uses_rd, rd_ptr);
-  ret_strs << ",";
-  appendNullableReg(uses_rs1, rs1_ptr);
-  ret_strs << ",";
-  appendNullableReg(uses_rs2, rs2_ptr);
-  ret_strs << ",";
-  appendNullableReg(uses_imm, imm_ptr);
-  ret_strs << "," << IF;
+  
+  ret_strs << getChannelValue(pc_ptr, streamInstrIndex);
+  ret_strs << "," << csvEscape(trace_instr);
+  ret_strs << "," << getChannelValue(rd_ptr, streamInstrIndex);
+  ret_strs << "," << getChannelValue(rs1_ptr, streamInstrIndex);
+  ret_strs << "," << getChannelValue(rs2_ptr, streamInstrIndex);
+  ret_strs << "," << getChannelValue(imm_ptr, streamInstrIndex);
+  ret_strs << "," << getChannelValue(rs1_data_ptr, streamInstrIndex);
+  ret_strs << "," << getChannelValue(rs2_data_ptr, streamInstrIndex);
+  ret_strs << "," << IF; 
   ret_strs << "," << ID;
   ret_strs << "," << EX;
   ret_strs << "," << MEM;
   ret_strs << "," << WB;
-
-  for(const auto& column : getSchedulingTraceColumns())
+  for(const auto& column : getSchedTraceColumns())
   {
-    ret_strs << ",";
-    auto it = schedulingTraceValues.find(column);
-    if(it == schedulingTraceValues.end())
-      ret_strs << "null";
-    else
-      ret_strs << it->second;
+    ret_strs << "," << getSchedTraceValue(column);
   }
-
-  ret_strs << "," << icache_miss;
-  ret_strs << "," << dcache_miss;
-  ret_strs << "," << branch_is_control;
-  ret_strs << "," << branch_mispredict;
-  ret_strs << "," << instr_id;
-  ret_strs << "," << uses_rs1;
-  ret_strs << "," << uses_rs2;
-  ret_strs << "," << uses_rd;
-  ret_strs << "," << uses_imm;
-  ret_strs << "," << stage_gap_if_id;
-  ret_strs << "," << stage_gap_id_ex;
-  ret_strs << "," << stage_gap_ex_mem;
-  ret_strs << "," << stage_gap_mem_wb;
-  ret_strs << "," << raw_wait_cycles;
-  ret_strs << "," << raw_blocking_reg;
-  ret_strs << "," << raw_blocking_ready_cycle;
-  ret_strs << "," << icache_delay_cycles;
-  ret_strs << "," << dcache_delay_cycles;
-  ret_strs << "," << branch_redirect_cycles;
-  ret_strs << "," << divider_delay_cycles;
+  ret_strs << "," << (trace_used_rs1 ? 1 : 0);
+  ret_strs << "," << (trace_used_rs2 ? 1 : 0);
+  ret_strs << "," << (trace_used_rd ? 1 : 0);
+  ret_strs << "," << (trace_has_rd_ready_cycle ? std::to_string(trace_rd_ready_cycle) : "null");
+  ret_strs << "," << (trace_icache_miss ? 1 : 0);
+  ret_strs << "," << (trace_dcache_miss ? 1 : 0);
+  ret_strs << "," << trace_icache_delay_cycles;
+  ret_strs << "," << trace_dcache_delay_cycles;
+  ret_strs << "," << trace_sim_misprediction;
   ret_strs << std::endl;
-
-  instr_id++;
-  resetTraceInstrumentation();
+  resetTraceState();
   return ret_strs.str();
 }
 
 std::string ROCKET_PerformanceModel::getPrintHeader(void)
 {
   std::stringstream ret_strs;
-
+  
   ret_strs << "pc";
   ret_strs << "," << "instr";
-  ret_strs << "," << "assembly";
   ret_strs << "," << "rd";
   ret_strs << "," << "rs1";
   ret_strs << "," << "rs2";
   ret_strs << "," << "imm";
-  ret_strs << "," << "IF";
+  ret_strs << "," << "rs1_data";
+  ret_strs << "," << "rs2_data";
+  ret_strs << "," << "IF"; 
   ret_strs << "," << "ID";
   ret_strs << "," << "EX";
   ret_strs << "," << "MEM";
   ret_strs << "," << "WB";
-
-  for(const auto& column : getSchedulingTraceColumns())
+  for(const auto& column : getSchedTraceColumns())
   {
     ret_strs << "," << column;
   }
-
+  ret_strs << "," << "used_rs1";
+  ret_strs << "," << "used_rs2";
+  ret_strs << "," << "used_rd";
+  ret_strs << "," << "rd_ready_cycle";
   ret_strs << "," << "icache_miss";
   ret_strs << "," << "dcache_miss";
-  ret_strs << "," << "branch_control";
-  ret_strs << "," << "branch_misprediction";
-  ret_strs << "," << "instr_id";
-  ret_strs << "," << "uses_rs1";
-  ret_strs << "," << "uses_rs2";
-  ret_strs << "," << "uses_rd";
-  ret_strs << "," << "uses_imm";
-  ret_strs << "," << "stage_gap_if_id";
-  ret_strs << "," << "stage_gap_id_ex";
-  ret_strs << "," << "stage_gap_ex_mem";
-  ret_strs << "," << "stage_gap_mem_wb";
-  ret_strs << "," << "raw_wait_cycles";
-  ret_strs << "," << "raw_blocking_reg";
-  ret_strs << "," << "raw_blocking_ready_cycle";
   ret_strs << "," << "icache_delay_cycles";
   ret_strs << "," << "dcache_delay_cycles";
-  ret_strs << "," << "branch_redirect_cycles";
-  ret_strs << "," << "divider_delay_cycles";
+  ret_strs << "," << "sim_misprediction";
   ret_strs << std::endl;
   return ret_strs.str();
 }
